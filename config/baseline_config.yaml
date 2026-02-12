@@ -1,0 +1,23 @@
+# Baseline cGAN Configuration (Conditional DCGAN)
+
+model:
+  latent_dim: 100
+  embed_dim: 50
+  generator_channels: [256, 128, 64]
+  discriminator_channels: [64, 128, 256]
+
+training:
+  batch_size: 128
+  num_epochs: 100
+  lr_g: 0.0002
+  lr_d: 0.0002
+  beta1: 0.5
+  beta2: 0.999
+  n_critic: 1
+  loss_type: "vanilla"
+
+data:
+  num_classes: 10
+  image_size: 32
+  seed: 42
+  num_workers: 2
