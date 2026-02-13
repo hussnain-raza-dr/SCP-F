@@ -188,13 +188,16 @@ class cGAN(nn.Module):
             )
             total_d_loss = total_d_loss + gp
 
-        # R1 gradient penalty (lazy): penalize large gradients on real data
-        # Scaled by r1_every to compensate for infrequent application
+        # R1 gradient penalty: penalize large gradients on real data.
+        # Applied every r1_every steps for efficiency, WITHOUT scaling by
+        # r1_every (the lazy scaling from StyleGAN2 causes destructive
+        # gradient spikes with hinge loss — hinge is bounded ~0-2, so a
+        # 16x spike overwhelms the adversarial signal and kills D).
         compute_r1 = (self.r1_gamma > 0 and
                       self.d_step_count % self.r1_every == 0)
         if compute_r1:
             r1 = r1_penalty(self.D, real_images, labels)
-            total_d_loss = total_d_loss + (self.r1_gamma / 2.0) * self.r1_every * r1
+            total_d_loss = total_d_loss + (self.r1_gamma / 2.0) * r1
 
         total_d_loss.backward()
         if self.grad_clip > 0:
