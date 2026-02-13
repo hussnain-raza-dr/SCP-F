@@ -1,48 +1,34 @@
-# Improved cGAN Configuration (v3 — Hinge loss + Spectral Norm)
-# Architecture: SN-GAN style — spectral norm handles Lipschitz constraint,
-# no gradient penalty needed (faster + more stable).
-#
-# Key design:
-#   - Hinge loss (SN-GAN / BigGAN standard) — no GP overhead
-#   - Balanced LRs (D already has 4x more params, no need for higher lr_d)
-#   - EMA on generator weights for smoother inference
-#   - Cosine LR decay
-#   - Instance noise on D inputs (decays over training)
-#   - Orthogonal weight initialization
+# Improved cGAN Configuration
+# Architecture: WGAN-GP + Spectral Norm + Residual Blocks + Self-Attention
 
 model:
   architecture: improved
   latent_dim: 128
   embed_dim: 64
-  generator_base_channels: 256
+  generator_base_channels: 128    # Reduced from 256 — fewer channels = smaller gradients
   discriminator_base_channels: 64
   use_self_attention: true
   use_residual: true
 
 training:
-  batch_size: 128
-  num_epochs: 200
-  # Balanced LRs: D has 9.8M params vs G's 2.5M, so equal LR is fair
-  lr_g: 0.0002
-  lr_d: 0.0002
-  beta1: 0.0        # No momentum (SN-GAN standard)
+  batch_size: 64
+  num_epochs: 100
+  lr_g: 0.00005    # Reduced from 0.0001 — key fix for explosion
+  lr_d: 0.0002     # Reduced from 0.0004 — key fix for explosion
+  beta1: 0.0       # WGAN-GP standard
   beta2: 0.9
-  n_critic: 2        # 2 D steps per G step (mild D advantage)
-  loss_type: "hinge"  # Hinge loss — pairs with spectral norm, no GP needed
-  grad_clip: 0.0
-
-  # EMA: Exponential Moving Average of generator weights for inference
-  ema_decay: 0.999
-
-  # Cosine LR scheduling
-  lr_schedule: "cosine"
-
-  # Instance noise: add Gaussian noise to D inputs, decaying over training
-  d_noise_std: 0.1
-  d_noise_decay_epochs: 100
+  n_critic: 5
+  gp_lambda: 10
+  loss_type: "wgan-gp"
+  grad_clip: 1.0   # NEW: gradient clipping as safety net
 
 data:
   num_classes: 10
   image_size: 32
   seed: 42
   num_workers: 2
+
+hyperparameter_search:
+  lr_g_tried: [0.0002, 0.0001, 0.00005]
+  lr_d_tried: [0.0004, 0.0002]
+  best_config: "lr_g=0.00005, lr_d=0.0002, base_channels=128"
