@@ -51,6 +51,36 @@ def wgan_g_loss(fake_scores: Tensor) -> Tensor:
     return -fake_scores.mean()
 
 
+def r1_penalty(
+    discriminator: nn.Module,
+    real_images: Tensor,
+    labels: Tensor,
+) -> Tensor:
+    """
+    R1 gradient penalty (Mescheder et al., 2018).
+
+    Penalizes ||∇_x D(x_real)||² to prevent D from becoming overconfident
+    on real data. This is the standard regularizer in StyleGAN/StyleGAN2.
+
+    Unlike full GP (which penalizes on interpolated samples), R1 only
+    penalizes on real data and is cheaper to compute.
+
+    Returns the raw penalty (caller scales by gamma/2).
+    """
+    real_images = real_images.detach().requires_grad_(True)
+    real_scores = discriminator(real_images, labels)
+
+    gradients = torch.autograd.grad(
+        outputs=real_scores.sum(),
+        inputs=real_images,
+        create_graph=True,
+    )[0]
+
+    # ||grad||^2 per sample, then average over batch
+    penalty = gradients.reshape(gradients.size(0), -1).pow(2).sum(dim=1).mean()
+    return penalty
+
+
 def gradient_penalty(
     discriminator: nn.Module,
     real_images: Tensor,
