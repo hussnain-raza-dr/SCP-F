@@ -1,34 +1,53 @@
-# Improved cGAN Configuration
-# Architecture: WGAN-GP + Spectral Norm + Residual Blocks + Self-Attention
+# Improved cGAN Configuration (v6 — calibrated R1)
+# Architecture: SN-GAN style with hinge loss.
+#
+# v5 results: epoch 20 images were the BEST yet (real shapes & textures!),
+# proving the architecture + reduced D capacity work. But R1 penalty with
+# lazy scaling (gamma/2 * r1_every * ||grad||²) created 16x gradient spikes
+# that killed D around epoch 25 → G loss diverged to -3e8.
+#
+# v6 fix: Remove lazy scaling multiplier. R1 is now applied every 16 steps
+# with constant weight (gamma/2), avoiding destructive spikes. Gamma
+# increased to 2.0 to compensate for the less frequent application.
 
 model:
   architecture: improved
   latent_dim: 128
   embed_dim: 64
-  generator_base_channels: 128    # Reduced from 256 — fewer channels = smaller gradients
-  discriminator_base_channels: 64
+  generator_base_channels: 256
+  discriminator_base_channels: 48    # Reduced from 64 → ~5.5M params (was ~9.8M)
   use_self_attention: true
   use_residual: true
 
 training:
-  batch_size: 64
-  num_epochs: 100
-  lr_g: 0.00005    # Reduced from 0.0001 — key fix for explosion
-  lr_d: 0.0002     # Reduced from 0.0004 — key fix for explosion
-  beta1: 0.0       # WGAN-GP standard
+  batch_size: 128
+  num_epochs: 200
+  # G-favored TTUR
+  lr_g: 0.0002
+  lr_d: 0.0001
+  beta1: 0.0
   beta2: 0.9
-  n_critic: 5
-  gp_lambda: 10
-  loss_type: "wgan-gp"
-  grad_clip: 1.0   # NEW: gradient clipping as safety net
+  n_critic: 1
+  loss_type: "hinge"
+  grad_clip: 0.0
+
+  # EMA
+  ema_decay: 0.999
+
+  # Cosine LR scheduling
+  lr_schedule: "cosine"
+
+  # Instance noise
+  d_noise_std: 0.1
+  d_noise_decay_epochs: 100
+
+  # R1 gradient penalty: applied every r1_every steps WITHOUT lazy scaling.
+  # Effective penalty per application = gamma/2 * ||∇D(real)||² (no multiplier).
+  r1_gamma: 2.0          # Higher gamma to compensate for no lazy scaling
+  r1_every: 16            # Compute every 16 steps (for efficiency, not scaling)
 
 data:
   num_classes: 10
   image_size: 32
   seed: 42
   num_workers: 2
-
-hyperparameter_search:
-  lr_g_tried: [0.0002, 0.0001, 0.00005]
-  lr_d_tried: [0.0004, 0.0002]
-  best_config: "lr_g=0.00005, lr_d=0.0002, base_channels=128"
