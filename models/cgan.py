@@ -18,7 +18,7 @@ from torch.optim.lr_scheduler import CosineAnnealingLR
 
 from models.generator import ImprovedGenerator, BaselineGenerator
 from models.discriminator import ImprovedDiscriminator, BaselineDiscriminator
-from training.losses import GANLoss, gradient_penalty
+from training.losses import GANLoss, gradient_penalty, r1_penalty
 
 
 class cGAN(nn.Module):
@@ -50,6 +50,11 @@ class cGAN(nn.Module):
         # Lazy gradient penalty: only compute GP every N D steps (StyleGAN2 trick)
         self.gp_every = training_cfg.get("gp_every", 1)
         self.d_step_count = 0
+
+        # R1 gradient penalty (StyleGAN2): penalizes ||∇D(real)||² to prevent
+        # D from becoming overconfident. Applied lazily every r1_every steps.
+        self.r1_gamma = training_cfg.get("r1_gamma", 0.0)
+        self.r1_every = training_cfg.get("r1_every", 16)
 
         # Build models
         arch = model_cfg.get("architecture", "improved")
@@ -170,7 +175,10 @@ class cGAN(nn.Module):
 
         # Lazy gradient penalty: only compute every gp_every D steps
         gp = torch.tensor(0.0, device=self.device)
+        r1 = torch.tensor(0.0, device=self.device)
         self.d_step_count += 1
+        total_d_loss = d_loss
+
         compute_gp = (self.loss_type == "wgan-gp" and
                       self.d_step_count % self.gp_every == 0)
         if compute_gp:
@@ -178,9 +186,15 @@ class cGAN(nn.Module):
                 self.D, real_images, fake_images, labels,
                 self.device, lambda_gp=self.gp_lambda
             )
-            total_d_loss = d_loss + gp
-        else:
-            total_d_loss = d_loss
+            total_d_loss = total_d_loss + gp
+
+        # R1 gradient penalty (lazy): penalize large gradients on real data
+        # Scaled by r1_every to compensate for infrequent application
+        compute_r1 = (self.r1_gamma > 0 and
+                      self.d_step_count % self.r1_every == 0)
+        if compute_r1:
+            r1 = r1_penalty(self.D, real_images, labels)
+            total_d_loss = total_d_loss + (self.r1_gamma / 2.0) * self.r1_every * r1
 
         total_d_loss.backward()
         if self.grad_clip > 0:
