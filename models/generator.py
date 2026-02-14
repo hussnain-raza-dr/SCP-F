@@ -121,7 +121,7 @@ class ImprovedGenerator(nn.Module):
       SelfAttention at 8x8
       ResBlockUp 256->128  (8->16)
       ResBlockUp 128->64   (16->32)
-      BN + ReLU + Conv2d(64, 3) + Tanh
+      BN + Conv2d(SN, 64, 3) + Tanh  (no ReLU — centered inputs prevent saturation)
     """
     def __init__(
         self,
@@ -145,12 +145,14 @@ class ImprovedGenerator(nn.Module):
         # Self-attention after first upsampling (8x8 resolution)
         self.attn = SelfAttention(base_channels)
 
-        # Final output layer (standard BigGAN: BN → ReLU → Conv → Tanh)
-        # No SN anywhere in G — ConditionalBN handles normalization.
-        # With standard Xavier init and no SN, conv(64→3) output is ~N(0, 0.6),
-        # keeping Tanh in its linear regime initially.
+        # Final output layer: BN → Conv(SN) → Tanh.
+        # SN on the final conv is the ONLY SN in G — it structurally prevents
+        # Tanh saturation. No ReLU: BN gives centered ~N(0,1) inputs, so the
+        # dot product w·x involves cancellations → output stays ~N(0, ||w||²)
+        # ≈ N(0,1). With ReLU, all-positive inputs would sum constructively
+        # → output magnitude ~sqrt(fan_in) → permanent Tanh saturation.
         self.final_bn = nn.BatchNorm2d(base_channels // 4)
-        self.final_conv = nn.Conv2d(base_channels // 4, 3, 3, padding=1)
+        self.final_conv = spectral_norm(nn.Conv2d(base_channels // 4, 3, 3, padding=1))
 
         self._init_weights()
 
@@ -171,8 +173,8 @@ class ImprovedGenerator(nn.Module):
         x = self.res2(x, labels)   # 16x16
         x = self.res3(x, labels)   # 32x32
 
-        # Output (standard BigGAN: BN → ReLU → Conv → Tanh)
-        x = F.relu(self.final_bn(x))
+        # Output: BN → Conv(SN) → Tanh (no ReLU — keeps inputs centered)
+        x = self.final_bn(x)
         x = torch.tanh(self.final_conv(x))
         return x
 
