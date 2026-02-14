@@ -1,33 +1,37 @@
-# Improved cGAN Configuration (v6 — calibrated R1)
+# Improved cGAN Configuration (v9)
 # Architecture: SN-GAN style with hinge loss.
 #
-# v5 results: epoch 20 images were the BEST yet (real shapes & textures!),
-# proving the architecture + reduced D capacity work. But R1 penalty with
-# lazy scaling (gamma/2 * r1_every * ||grad||²) created 16x gradient spikes
-# that killed D around epoch 25 → G loss diverged to -3e8.
+# v6-v8 all produced saturated color blocks due to three compounding issues:
+#   1. G-favored TTUR (lr_g=2×lr_d) starved D of learning capacity
+#   2. R1 penalty (gamma=2.0) actively suppressed D's gradients on real data,
+#      causing Real→Real accuracy to drop below 50%
+#   3. D base_channels=48 was too small for reliable feature extraction
 #
-# v6 fix: Remove lazy scaling multiplier. R1 is now applied every 16 steps
-# with constant weight (gamma/2), avoiding destructive spikes. Gamma
-# increased to 2.0 to compensate for the less frequent application.
+# v9 fixes:
+#   - D-favored TTUR (lr_d=4×lr_g), matching BigGAN standard
+#   - R1 disabled (SN + hinge is sufficient for stability)
+#   - D base_channels restored to 64 for adequate capacity
+#   - n_critic=2 to give D extra training (BigGAN standard)
+#   - Generator: SN only on final conv + no ReLU (structural anti-saturation)
 
 model:
   architecture: improved
   latent_dim: 128
   embed_dim: 64
   generator_base_channels: 256
-  discriminator_base_channels: 48    # Reduced from 64 → ~5.5M params (was ~9.8M)
+  discriminator_base_channels: 64    # Restored from 48 — D needs capacity to learn
   use_self_attention: true
   use_residual: true
 
 training:
   batch_size: 128
   num_epochs: 200
-  # G-favored TTUR
-  lr_g: 0.0002
-  lr_d: 0.0001
+  # D-favored TTUR (BigGAN standard: D learns 4× faster than G)
+  lr_g: 0.0001
+  lr_d: 0.0004
   beta1: 0.0
-  beta2: 0.9
-  n_critic: 1
+  beta2: 0.999               # BigGAN uses 0.999 (was 0.9)
+  n_critic: 2                 # Train D twice per G step (BigGAN standard)
   loss_type: "hinge"
   grad_clip: 0.0
 
@@ -41,10 +45,12 @@ training:
   d_noise_std: 0.1
   d_noise_decay_epochs: 100
 
-  # R1 gradient penalty: applied every r1_every steps WITHOUT lazy scaling.
-  # Effective penalty per application = gamma/2 * ||∇D(real)||² (no multiplier).
-  r1_gamma: 2.0          # Higher gamma to compensate for no lazy scaling
-  r1_every: 16            # Compute every 16 steps (for efficiency, not scaling)
+  # R1 gradient penalty: DISABLED. R1 penalizes ||∇D(real)||², which
+  # actively suppresses D's confidence on real data. This caused
+  # Real→Real accuracy to drop below 50% in v6-v8. SN + hinge loss
+  # already provides sufficient Lipschitz regularization.
+  r1_gamma: 0.0
+  r1_every: 16
 
 data:
   num_classes: 10
