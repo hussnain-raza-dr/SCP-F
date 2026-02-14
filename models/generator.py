@@ -12,9 +12,9 @@ Key design choices vs. baseline:
      consistency (e.g., coherent object shape) requires long-range dependencies.
      Self-attention lets the generator attend to distant spatial locations.
 
-3. Spectral normalization in upsampling convolutions.
-   - Why: Stabilizes the Lipschitz constant of the generator, complementing
-     WGAN-GP training. Prevents feature explosion in upsampling layers.
+3. NO spectral normalization in the generator (SN is for D only).
+   - Why: Standard in BigGAN/SN-GAN. ConditionalBN handles normalization in G.
+     SN on G limits expressivity and causes Tanh saturation at the output layer.
 
 4. Pixel shuffle (sub-pixel convolution) for the final upsampling step.
    - Why: Avoids checkerboard artifacts common with ConvTranspose2d.
@@ -29,19 +29,23 @@ Key design choices vs. baseline:
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.nn.utils import spectral_norm
+from torch.nn.utils import spectral_norm  # Used by discriminator (imports SelfAttention)
 
 
 class SelfAttention(nn.Module):
     """
     Self-attention module from SAGAN (Zhang et al., 2018).
     Applied at a specific spatial scale to capture global structure.
+
+    Note: no spectral norm here — SN is only for the discriminator.
+    When used in D, the D wraps its own attention convs with SN.
     """
-    def __init__(self, in_channels: int):
+    def __init__(self, in_channels: int, use_sn: bool = False):
         super().__init__()
-        self.query = spectral_norm(nn.Conv2d(in_channels, in_channels // 8, 1))
-        self.key   = spectral_norm(nn.Conv2d(in_channels, in_channels // 8, 1))
-        self.value = spectral_norm(nn.Conv2d(in_channels, in_channels, 1))
+        wrap = spectral_norm if use_sn else (lambda m: m)
+        self.query = wrap(nn.Conv2d(in_channels, in_channels // 8, 1))
+        self.key   = wrap(nn.Conv2d(in_channels, in_channels // 8, 1))
+        self.value = wrap(nn.Conv2d(in_channels, in_channels, 1))
         self.gamma = nn.Parameter(torch.zeros(1))  # Learned mixing weight
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -85,12 +89,12 @@ class ResBlockUp(nn.Module):
     def __init__(self, in_channels: int, out_channels: int, num_classes: int, embed_dim: int):
         super().__init__()
         self.cbn1 = ConditionalBatchNorm2d(in_channels, num_classes, embed_dim)
-        self.conv1 = spectral_norm(nn.Conv2d(in_channels, out_channels, 3, padding=1))
+        self.conv1 = nn.Conv2d(in_channels, out_channels, 3, padding=1)
         self.cbn2 = ConditionalBatchNorm2d(out_channels, num_classes, embed_dim)
-        self.conv2 = spectral_norm(nn.Conv2d(out_channels, out_channels, 3, padding=1))
+        self.conv2 = nn.Conv2d(out_channels, out_channels, 3, padding=1)
 
         # Shortcut: 1x1 conv to match channels, applied after upsampling
-        self.shortcut = spectral_norm(nn.Conv2d(in_channels, out_channels, 1))
+        self.shortcut = nn.Conv2d(in_channels, out_channels, 1)
 
     def forward(self, x: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
         # Main path
@@ -117,7 +121,7 @@ class ImprovedGenerator(nn.Module):
       SelfAttention at 8x8
       ResBlockUp 256->128  (8->16)
       ResBlockUp 128->64   (16->32)
-      BN + Conv2d(64, 3) + Tanh  (no ReLU — prevents Tanh saturation)
+      BN + ReLU + Conv2d(64, 3) + Tanh
     """
     def __init__(
         self,
@@ -130,8 +134,8 @@ class ImprovedGenerator(nn.Module):
         self.latent_dim = latent_dim
         self.base_channels = base_channels
 
-        # Project z to spatial feature map
-        self.fc = spectral_norm(nn.Linear(latent_dim, base_channels * 4 * 4))
+        # Project z to spatial feature map (no SN — ConditionalBN normalizes in res1)
+        self.fc = nn.Linear(latent_dim, base_channels * 4 * 4)
 
         # Residual upsampling blocks
         self.res1 = ResBlockUp(base_channels,      base_channels,      num_classes, embed_dim)
@@ -141,18 +145,14 @@ class ImprovedGenerator(nn.Module):
         # Self-attention after first upsampling (8x8 resolution)
         self.attn = SelfAttention(base_channels)
 
-        # Final output layer — NO spectral norm and small init to prevent
-        # Tanh saturation. With 64 SN'd channels after ReLU, a SN'd conv
-        # produces ||output|| ≈ 6 → tanh(6) ≈ ±1 (permanently saturated).
-        # Without SN and with gain=0.1, initial output ≈ 0 → tanh linear regime.
+        # Final output layer (standard BigGAN: BN → ReLU → Conv → Tanh)
+        # No SN anywhere in G — ConditionalBN handles normalization.
+        # With standard Xavier init and no SN, conv(64→3) output is ~N(0, 0.6),
+        # keeping Tanh in its linear regime initially.
         self.final_bn = nn.BatchNorm2d(base_channels // 4)
         self.final_conv = nn.Conv2d(base_channels // 4, 3, 3, padding=1)
 
         self._init_weights()
-
-        # Override: small init for final conv so Tanh starts in linear regime
-        nn.init.xavier_uniform_(self.final_conv.weight, gain=0.1)
-        nn.init.zeros_(self.final_conv.bias)
 
     def _init_weights(self):
         for m in self.modules():
@@ -171,9 +171,8 @@ class ImprovedGenerator(nn.Module):
         x = self.res2(x, labels)   # 16x16
         x = self.res3(x, labels)   # 32x32
 
-        # Output — no ReLU: BN gives centered inputs (pos+neg), so conv
-        # outputs are balanced and small, keeping Tanh in its linear regime.
-        x = self.final_bn(x)
+        # Output (standard BigGAN: BN → ReLU → Conv → Tanh)
+        x = F.relu(self.final_bn(x))
         x = torch.tanh(self.final_conv(x))
         return x
 

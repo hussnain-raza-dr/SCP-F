@@ -93,7 +93,7 @@ class ImprovedDiscriminator(nn.Module):
         self.first_conv = spectral_norm(nn.Conv2d(3, base_channels, 3, padding=1))
 
         self.res1 = ResBlockDown(base_channels,      base_channels * 2,  downsample=True)   # 16x16
-        self.attn = SelfAttention(base_channels * 2)
+        self.attn = SelfAttention(base_channels * 2, use_sn=True)
         self.res2 = ResBlockDown(base_channels * 2,  base_channels * 4,  downsample=True)   # 8x8
         self.res3 = ResBlockDown(base_channels * 4,  base_channels * 8,  downsample=True)   # 4x4
         self.res4 = ResBlockDown(base_channels * 8,  base_channels * 8,  downsample=False)  # 4x4
@@ -125,9 +125,12 @@ class ImprovedDiscriminator(nn.Module):
         h = self.res3(h)          # 4x4
         h = self.res4(h)          # 4x4
 
-        # Global sum pooling (summing preserves gradient magnitude better than avg for D)
+        # Global mean pooling — sum pooling with ResBlocks produces feature
+        # magnitudes ~450, making hinge margins (±1) meaningless. Mean pooling
+        # normalizes by the spatial size (4×4=16), keeping outputs in a
+        # reasonable range for hinge loss.
         h = F.leaky_relu(h, 0.2)
-        h = h.sum(dim=[2, 3])     # (B, C)
+        h = h.mean(dim=[2, 3])    # (B, C)
 
         # Unconditional output
         out = self.linear(h).squeeze(1)
