@@ -117,7 +117,7 @@ class ImprovedGenerator(nn.Module):
       SelfAttention at 8x8
       ResBlockUp 256->128  (8->16)
       ResBlockUp 128->64   (16->32)
-      BN + ReLU + Conv2d(64, 3) + Tanh
+      BN + Conv2d(64, 3) + Tanh  (no ReLU — prevents Tanh saturation)
     """
     def __init__(
         self,
@@ -141,11 +141,18 @@ class ImprovedGenerator(nn.Module):
         # Self-attention after first upsampling (8x8 resolution)
         self.attn = SelfAttention(base_channels)
 
-        # Final output layer
+        # Final output layer — NO spectral norm and small init to prevent
+        # Tanh saturation. With 64 SN'd channels after ReLU, a SN'd conv
+        # produces ||output|| ≈ 6 → tanh(6) ≈ ±1 (permanently saturated).
+        # Without SN and with gain=0.1, initial output ≈ 0 → tanh linear regime.
         self.final_bn = nn.BatchNorm2d(base_channels // 4)
-        self.final_conv = spectral_norm(nn.Conv2d(base_channels // 4, 3, 3, padding=1))
+        self.final_conv = nn.Conv2d(base_channels // 4, 3, 3, padding=1)
 
         self._init_weights()
+
+        # Override: small init for final conv so Tanh starts in linear regime
+        nn.init.xavier_uniform_(self.final_conv.weight, gain=0.1)
+        nn.init.zeros_(self.final_conv.bias)
 
     def _init_weights(self):
         for m in self.modules():
@@ -164,8 +171,9 @@ class ImprovedGenerator(nn.Module):
         x = self.res2(x, labels)   # 16x16
         x = self.res3(x, labels)   # 32x32
 
-        # Output
-        x = F.relu(self.final_bn(x))
+        # Output — no ReLU: BN gives centered inputs (pos+neg), so conv
+        # outputs are balanced and small, keeping Tanh in its linear regime.
+        x = self.final_bn(x)
         x = torch.tanh(self.final_conv(x))
         return x
 
