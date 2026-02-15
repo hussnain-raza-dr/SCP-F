@@ -16,9 +16,10 @@ Key design choices vs. baseline:
    - Why: Standard in BigGAN/SN-GAN. ConditionalBN handles normalization in G.
      SN on G limits expressivity and causes Tanh saturation at the output layer.
 
-4. Pixel shuffle (sub-pixel convolution) for the final upsampling step.
+4. Nearest-neighbor upsampling + Conv2d instead of ConvTranspose2d.
    - Why: Avoids checkerboard artifacts common with ConvTranspose2d.
-     PixelShuffle rearranges channels into spatial resolution cleanly.
+     Nearest-neighbor interpolation followed by a learned convolution
+     produces cleaner spatial upsampling without deconvolution artifacts.
 
 5. Class conditioning via projection (not concatenation).
    - Why: Projection conditioning (embedding projected into a scale/shift for

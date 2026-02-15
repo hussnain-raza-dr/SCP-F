@@ -84,6 +84,7 @@ def evaluate(checkpoint_path: str, config_path: str, arch: str, output_dir: str 
     real_correct = 0
     fake_correct = 0
     total = 0
+    loss_type = config["training"].get("loss_type", "hinge")
 
     with torch.no_grad():
         for real_images, labels in test_loader:
@@ -95,8 +96,12 @@ def evaluate(checkpoint_path: str, config_path: str, arch: str, output_dir: str 
             fake_images = model.G(z, labels)
             fake_scores = model.D(fake_images, labels)
 
-            real_correct += (real_scores > 0).sum().item()
-            fake_correct += (fake_scores < 0).sum().item()
+            if loss_type == "vanilla":
+                real_correct += (torch.sigmoid(real_scores) > 0.5).sum().item()
+                fake_correct += (torch.sigmoid(fake_scores) < 0.5).sum().item()
+            else:
+                real_correct += (real_scores > 0).sum().item()
+                fake_correct += (fake_scores < 0).sum().item()
             total += bs
 
     real_acc = real_correct / total
