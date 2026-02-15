@@ -1,0 +1,24 @@
+#!/bin/bash
+#PBS -N cgan_cifar10
+#PBS -o results/pbs_output.log
+#PBS -e results/pbs_error.log
+#PBS -l walltime=08:00:00
+#PBS -l select=1:ncpus=8:mem=16gb:ngpus=1
+#PBS -q gpuq
+
+cd $HOME/SCP-F
+source venv/bin/activate
+
+mkdir -p results checkpoints
+
+echo "Started: $(date)"
+nvidia-smi
+
+LATEST=$(ls -t checkpoints/improved_epoch_*.pt 2>/dev/null | head -1)
+if [ -z "$LATEST" ]; then
+    python training/train.py --config config/improved_config.yaml
+else
+    python training/train.py --config config/improved_config.yaml --resume "$LATEST"
+fi
+
+echo "Finished: $(date)"

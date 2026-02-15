@@ -1,0 +1,250 @@
+Started: Sa 14. Feb 13:03:43 CET 2026
+Sat Feb 14 13:03:43 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 590.48.01              Driver Version: 590.48.01      CUDA Version: 13.1     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  Quadro RTX 5000                On  |   00000000:AF:00.0 Off |                  Off |
+| 33%   24C    P8              9W /  230W |      19MiB /  16384MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|    0   N/A  N/A            4032      G   /usr/libexec/Xorg                        16MiB |
++-----------------------------------------------------------------------------------------+
+Using device: cuda
+GPU: Quadro RTX 5000
+GPU memory: 16.7 GB
+Dataset: 50000 training images, 10 classes
+Generator parameters:     2,474,692
+Discriminator parameters: 9,829,922
+G/D parameter ratio:      0.25
+EMA enabled (decay=0.999)
+
+============================================================
+Training improved cGAN for 200 epochs
+Loss: hinge, n_critic=2
+LR_G: 0.0001, LR_D: 0.0004
+Instance noise: std=0.1, decay over 100 epochs
+============================================================
+
+Epoch [  1/200] | D: 1.1727 | G: 0.4790 | GP: 0.0000 | D_real: 69.28% | D_fake: 81.52% | LR_G: 0.000100 | noise=0.1000 | Time: 128.4s
+Epoch [  2/200] | D: 1.1740 | G: 0.3890 | GP: 0.0000 | D_real: 71.47% | D_fake: 75.98% | LR_G: 0.000100 | noise=0.0990 | Time: 125.2s
+Epoch [  3/200] | D: 1.2491 | G: 0.1591 | GP: 0.0000 | D_real: 66.63% | D_fake: 79.01% | LR_G: 0.000100 | noise=0.0980 | Time: 125.5s
+Epoch [  4/200] | D: 1.2998 | G: 0.3010 | GP: 0.0000 | D_real: 71.96% | D_fake: 72.28% | LR_G: 0.000100 | noise=0.0970 | Time: 125.4s
+Epoch [  5/200] | D: 1.2608 | G: 0.4319 | GP: 0.0000 | D_real: 74.98% | D_fake: 70.99% | LR_G: 0.000100 | noise=0.0960 | Time: 125.3s
+Epoch [  6/200] | D: 1.2545 | G: 0.3232 | GP: 0.0000 | D_real: 70.35% | D_fake: 75.36% | LR_G: 0.000100 | noise=0.0950 | Time: 125.4s
+Epoch [  7/200] | D: 1.2210 | G: 0.3571 | GP: 0.0000 | D_real: 72.58% | D_fake: 75.64% | LR_G: 0.000100 | noise=0.0940 | Time: 125.3s
+Epoch [  8/200] | D: 1.2086 | G: 0.3930 | GP: 0.0000 | D_real: 72.81% | D_fake: 76.01% | LR_G: 0.000100 | noise=0.0930 | Time: 125.3s
+Epoch [  9/200] | D: 1.2023 | G: 0.3037 | GP: 0.0000 | D_real: 70.51% | D_fake: 78.29% | LR_G: 0.000100 | noise=0.0920 | Time: 125.3s
+Epoch [ 10/200] | D: 1.1785 | G: 0.1062 | GP: 0.0000 | D_real: 63.34% | D_fake: 85.87% | LR_G: 0.000099 | noise=0.0910 | Time: 125.4s
+Epoch [ 11/200] | D: 1.1691 | G: 0.2745 | GP: 0.0000 | D_real: 69.81% | D_fake: 80.71% | LR_G: 0.000099 | noise=0.0900 | Time: 125.4s
+Epoch [ 12/200] | D: 1.1511 | G: 0.2948 | GP: 0.0000 | D_real: 70.72% | D_fake: 80.79% | LR_G: 0.000099 | noise=0.0890 | Time: 125.3s
+Epoch [ 13/200] | D: 1.1482 | G: 0.4820 | GP: 0.0000 | D_real: 76.46% | D_fake: 75.96% | LR_G: 0.000099 | noise=0.0880 | Time: 125.4s
+Epoch [ 14/200] | D: 1.1313 | G: 0.7414 | GP: 0.0000 | D_real: 84.60% | D_fake: 69.20% | LR_G: 0.000099 | noise=0.0870 | Time: 125.3s
+Epoch [ 15/200] | D: 1.1185 | G: 0.5842 | GP: 0.0000 | D_real: 78.77% | D_fake: 75.34% | LR_G: 0.000099 | noise=0.0860 | Time: 125.3s
+Epoch [ 16/200] | D: 1.1127 | G: 0.8103 | GP: 0.0000 | D_real: 86.95% | D_fake: 67.83% | LR_G: 0.000098 | noise=0.0850 | Time: 125.3s
+Epoch [ 17/200] | D: 1.1069 | G: 0.8184 | GP: 0.0000 | D_real: 86.36% | D_fake: 69.14% | LR_G: 0.000098 | noise=0.0840 | Time: 125.3s
+Epoch [ 18/200] | D: 1.0920 | G: 0.7600 | GP: 0.0000 | D_real: 84.47% | D_fake: 71.65% | LR_G: 0.000098 | noise=0.0830 | Time: 125.3s
+Epoch [ 19/200] | D: 1.0866 | G: 0.7541 | GP: 0.0000 | D_real: 83.95% | D_fake: 72.17% | LR_G: 0.000098 | noise=0.0820 | Time: 125.4s
+Epoch [ 20/200] | D: 1.0864 | G: 0.3853 | GP: 0.0000 | D_real: 71.82% | D_fake: 82.85% | LR_G: 0.000098 | noise=0.0810 | Time: 125.3s
+Epoch [ 21/200] | D: 1.0737 | G: 0.7548 | GP: 0.0000 | D_real: 84.26% | D_fake: 72.45% | LR_G: 0.000097 | noise=0.0800 | Time: 125.4s
+Epoch [ 22/200] | D: 1.0725 | G: 0.6891 | GP: 0.0000 | D_real: 81.73% | D_fake: 74.94% | LR_G: 0.000097 | noise=0.0790 | Time: 125.3s
+Epoch [ 23/200] | D: 1.0699 | G: 0.9473 | GP: 0.0000 | D_real: 89.92% | D_fake: 67.82% | LR_G: 0.000097 | noise=0.0780 | Time: 125.3s
+Epoch [ 24/200] | D: 1.0600 | G: 0.8375 | GP: 0.0000 | D_real: 86.10% | D_fake: 71.85% | LR_G: 0.000097 | noise=0.0770 | Time: 125.3s
+Epoch [ 25/200] | D: 1.0538 | G: 0.8347 | GP: 0.0000 | D_real: 85.88% | D_fake: 71.94% | LR_G: 0.000096 | noise=0.0760 | Time: 125.3s
+  Checkpoint saved: checkpoints/improved_epoch_0025.pt
+Epoch [ 26/200] | D: 1.0423 | G: 0.9167 | GP: 0.0000 | D_real: 88.75% | D_fake: 70.35% | LR_G: 0.000096 | noise=0.0750 | Time: 125.4s
+Epoch [ 27/200] | D: 1.0405 | G: 0.9854 | GP: 0.0000 | D_real: 90.38% | D_fake: 68.81% | LR_G: 0.000096 | noise=0.0740 | Time: 125.3s
+Epoch [ 28/200] | D: 1.0319 | G: 0.8902 | GP: 0.0000 | D_real: 87.12% | D_fake: 72.29% | LR_G: 0.000095 | noise=0.0730 | Time: 125.3s
+Epoch [ 29/200] | D: 1.0326 | G: 0.9994 | GP: 0.0000 | D_real: 90.38% | D_fake: 69.40% | LR_G: 0.000095 | noise=0.0720 | Time: 125.3s
+Epoch [ 30/200] | D: 1.0224 | G: 1.0010 | GP: 0.0000 | D_real: 90.34% | D_fake: 69.97% | LR_G: 0.000095 | noise=0.0710 | Time: 125.3s
+Epoch [ 31/200] | D: 1.0116 | G: 0.9516 | GP: 0.0000 | D_real: 88.93% | D_fake: 71.83% | LR_G: 0.000094 | noise=0.0700 | Time: 125.4s
+Epoch [ 32/200] | D: 1.0129 | G: 0.8620 | GP: 0.0000 | D_real: 86.10% | D_fake: 74.14% | LR_G: 0.000094 | noise=0.0690 | Time: 125.4s
+Epoch [ 33/200] | D: 1.0068 | G: 0.7327 | GP: 0.0000 | D_real: 81.76% | D_fake: 78.08% | LR_G: 0.000093 | noise=0.0680 | Time: 125.3s
+Epoch [ 34/200] | D: 0.9872 | G: 1.0314 | GP: 0.0000 | D_real: 90.82% | D_fake: 71.32% | LR_G: 0.000093 | noise=0.0670 | Time: 125.3s
+Epoch [ 35/200] | D: 0.9856 | G: 1.0181 | GP: 0.0000 | D_real: 90.70% | D_fake: 71.27% | LR_G: 0.000093 | noise=0.0660 | Time: 125.3s
+Epoch [ 36/200] | D: 0.9888 | G: 1.0264 | GP: 0.0000 | D_real: 90.65% | D_fake: 70.99% | LR_G: 0.000092 | noise=0.0650 | Time: 125.3s
+Epoch [ 37/200] | D: 0.9787 | G: 1.0316 | GP: 0.0000 | D_real: 90.92% | D_fake: 71.35% | LR_G: 0.000092 | noise=0.0640 | Time: 125.3s
+Epoch [ 38/200] | D: 0.9766 | G: 0.9489 | GP: 0.0000 | D_real: 88.12% | D_fake: 73.93% | LR_G: 0.000091 | noise=0.0630 | Time: 125.3s
+Epoch [ 39/200] | D: 0.9672 | G: 0.8467 | GP: 0.0000 | D_real: 84.96% | D_fake: 77.34% | LR_G: 0.000091 | noise=0.0620 | Time: 125.4s
+Epoch [ 40/200] | D: 0.9682 | G: 1.0012 | GP: 0.0000 | D_real: 89.31% | D_fake: 73.37% | LR_G: 0.000091 | noise=0.0610 | Time: 125.4s
+Epoch [ 41/200] | D: 0.9505 | G: 1.0539 | GP: 0.0000 | D_real: 91.11% | D_fake: 73.11% | LR_G: 0.000090 | noise=0.0600 | Time: 125.6s
+Epoch [ 42/200] | D: 0.9487 | G: 0.9904 | GP: 0.0000 | D_real: 88.82% | D_fake: 74.50% | LR_G: 0.000090 | noise=0.0590 | Time: 125.5s
+Epoch [ 43/200] | D: 0.9416 | G: 1.0382 | GP: 0.0000 | D_real: 90.42% | D_fake: 73.69% | LR_G: 0.000089 | noise=0.0580 | Time: 125.4s
+Epoch [ 44/200] | D: 0.9446 | G: 1.0665 | GP: 0.0000 | D_real: 91.04% | D_fake: 72.59% | LR_G: 0.000089 | noise=0.0570 | Time: 125.5s
+Epoch [ 45/200] | D: 0.9379 | G: 1.0732 | GP: 0.0000 | D_real: 91.19% | D_fake: 72.91% | LR_G: 0.000088 | noise=0.0560 | Time: 125.4s
+Epoch [ 46/200] | D: 0.9241 | G: 1.0792 | GP: 0.0000 | D_real: 91.01% | D_fake: 73.91% | LR_G: 0.000088 | noise=0.0550 | Time: 125.4s
+Epoch [ 47/200] | D: 0.9234 | G: 1.0244 | GP: 0.0000 | D_real: 89.20% | D_fake: 75.52% | LR_G: 0.000087 | noise=0.0540 | Time: 125.4s
+Epoch [ 48/200] | D: 0.9134 | G: 1.0921 | GP: 0.0000 | D_real: 91.41% | D_fake: 74.26% | LR_G: 0.000087 | noise=0.0530 | Time: 125.3s
+Epoch [ 49/200] | D: 0.9113 | G: 1.0975 | GP: 0.0000 | D_real: 91.33% | D_fake: 74.20% | LR_G: 0.000086 | noise=0.0520 | Time: 125.3s
+Epoch [ 50/200] | D: 0.8968 | G: 1.1088 | GP: 0.0000 | D_real: 91.74% | D_fake: 74.83% | LR_G: 0.000086 | noise=0.0510 | Time: 125.4s
+  Checkpoint saved: checkpoints/improved_epoch_0050.pt
+Epoch [ 51/200] | D: 0.8971 | G: 0.9467 | GP: 0.0000 | D_real: 86.86% | D_fake: 78.66% | LR_G: 0.000085 | noise=0.0500 | Time: 125.5s
+Epoch [ 52/200] | D: 0.8963 | G: 1.0770 | GP: 0.0000 | D_real: 90.54% | D_fake: 75.49% | LR_G: 0.000084 | noise=0.0490 | Time: 125.6s
+Epoch [ 53/200] | D: 0.8853 | G: 1.1243 | GP: 0.0000 | D_real: 91.60% | D_fake: 75.15% | LR_G: 0.000084 | noise=0.0480 | Time: 125.4s
+Epoch [ 54/200] | D: 0.8821 | G: 1.1281 | GP: 0.0000 | D_real: 91.90% | D_fake: 75.12% | LR_G: 0.000083 | noise=0.0470 | Time: 125.4s
+Epoch [ 55/200] | D: 0.8731 | G: 1.1323 | GP: 0.0000 | D_real: 91.88% | D_fake: 75.54% | LR_G: 0.000083 | noise=0.0460 | Time: 125.4s
+Epoch [ 56/200] | D: 0.8669 | G: 1.1118 | GP: 0.0000 | D_real: 91.07% | D_fake: 76.21% | LR_G: 0.000082 | noise=0.0450 | Time: 125.5s
+Epoch [ 57/200] | D: 0.8582 | G: 1.0876 | GP: 0.0000 | D_real: 90.28% | D_fake: 77.43% | LR_G: 0.000081 | noise=0.0440 | Time: 125.4s
+Epoch [ 58/200] | D: 0.8543 | G: 1.1600 | GP: 0.0000 | D_real: 92.27% | D_fake: 75.91% | LR_G: 0.000081 | noise=0.0430 | Time: 125.4s
+Epoch [ 59/200] | D: 0.8475 | G: 1.1592 | GP: 0.0000 | D_real: 92.12% | D_fake: 76.18% | LR_G: 0.000080 | noise=0.0420 | Time: 125.4s
+Epoch [ 60/200] | D: 0.8457 | G: 1.1714 | GP: 0.0000 | D_real: 92.58% | D_fake: 76.28% | LR_G: 0.000080 | noise=0.0410 | Time: 125.4s
+Epoch [ 61/200] | D: 0.8382 | G: 1.1719 | GP: 0.0000 | D_real: 92.41% | D_fake: 76.59% | LR_G: 0.000079 | noise=0.0400 | Time: 125.5s
+Epoch [ 62/200] | D: 0.8329 | G: 1.1695 | GP: 0.0000 | D_real: 91.81% | D_fake: 77.39% | LR_G: 0.000078 | noise=0.0390 | Time: 125.5s
+Epoch [ 63/200] | D: 0.8269 | G: 1.1672 | GP: 0.0000 | D_real: 91.97% | D_fake: 77.28% | LR_G: 0.000078 | noise=0.0380 | Time: 125.5s
+Epoch [ 64/200] | D: 0.8192 | G: 1.1962 | GP: 0.0000 | D_real: 92.52% | D_fake: 77.32% | LR_G: 0.000077 | noise=0.0370 | Time: 125.4s
+Epoch [ 65/200] | D: 0.8174 | G: 1.1995 | GP: 0.0000 | D_real: 92.74% | D_fake: 76.95% | LR_G: 0.000076 | noise=0.0360 | Time: 125.3s
+Epoch [ 66/200] | D: 0.8078 | G: 1.2004 | GP: 0.0000 | D_real: 92.61% | D_fake: 77.52% | LR_G: 0.000076 | noise=0.0350 | Time: 125.3s
+Epoch [ 67/200] | D: 0.8136 | G: 1.0873 | GP: 0.0000 | D_real: 89.48% | D_fake: 80.11% | LR_G: 0.000075 | noise=0.0340 | Time: 125.3s
+Epoch [ 68/200] | D: 0.8045 | G: 1.2183 | GP: 0.0000 | D_real: 92.95% | D_fake: 77.36% | LR_G: 0.000074 | noise=0.0330 | Time: 125.3s
+Epoch [ 69/200] | D: 0.8017 | G: 1.1889 | GP: 0.0000 | D_real: 91.94% | D_fake: 78.35% | LR_G: 0.000074 | noise=0.0320 | Time: 125.3s
+Epoch [ 70/200] | D: 0.7923 | G: 1.2320 | GP: 0.0000 | D_real: 92.92% | D_fake: 77.87% | LR_G: 0.000073 | noise=0.0310 | Time: 125.3s
+Epoch [ 71/200] | D: 0.7889 | G: 1.2171 | GP: 0.0000 | D_real: 92.29% | D_fake: 78.59% | LR_G: 0.000072 | noise=0.0300 | Time: 125.5s
+Epoch [ 72/200] | D: 0.7814 | G: 1.2447 | GP: 0.0000 | D_real: 93.13% | D_fake: 78.19% | LR_G: 0.000072 | noise=0.0290 | Time: 125.4s
+Epoch [ 73/200] | D: 0.7726 | G: 1.2474 | GP: 0.0000 | D_real: 93.28% | D_fake: 78.51% | LR_G: 0.000071 | noise=0.0280 | Time: 125.5s
+Epoch [ 74/200] | D: 0.7777 | G: 1.2548 | GP: 0.0000 | D_real: 93.17% | D_fake: 78.54% | LR_G: 0.000070 | noise=0.0270 | Time: 125.4s
+Epoch [ 75/200] | D: 0.7643 | G: 1.2535 | GP: 0.0000 | D_real: 93.08% | D_fake: 79.17% | LR_G: 0.000069 | noise=0.0260 | Time: 125.3s
+  Checkpoint saved: checkpoints/improved_epoch_0075.pt
+Epoch [ 76/200] | D: 0.7637 | G: 1.2677 | GP: 0.0000 | D_real: 93.44% | D_fake: 78.82% | LR_G: 0.000069 | noise=0.0250 | Time: 125.4s
+Epoch [ 77/200] | D: 0.7509 | G: 1.2692 | GP: 0.0000 | D_real: 93.49% | D_fake: 79.18% | LR_G: 0.000068 | noise=0.0240 | Time: 125.3s
+Epoch [ 78/200] | D: 0.7450 | G: 1.2747 | GP: 0.0000 | D_real: 93.44% | D_fake: 79.89% | LR_G: 0.000067 | noise=0.0230 | Time: 125.3s
+Epoch [ 79/200] | D: 0.7437 | G: 1.2815 | GP: 0.0000 | D_real: 93.59% | D_fake: 79.79% | LR_G: 0.000067 | noise=0.0220 | Time: 125.3s
+Epoch [ 80/200] | D: 0.7393 | G: 1.2643 | GP: 0.0000 | D_real: 92.79% | D_fake: 80.61% | LR_G: 0.000066 | noise=0.0210 | Time: 125.3s
+Epoch [ 81/200] | D: 0.7383 | G: 1.2930 | GP: 0.0000 | D_real: 93.57% | D_fake: 79.94% | LR_G: 0.000065 | noise=0.0200 | Time: 125.5s
+Epoch [ 82/200] | D: 0.7274 | G: 1.3072 | GP: 0.0000 | D_real: 93.82% | D_fake: 80.26% | LR_G: 0.000064 | noise=0.0190 | Time: 125.5s
+Epoch [ 83/200] | D: 0.7224 | G: 1.3025 | GP: 0.0000 | D_real: 93.44% | D_fake: 80.57% | LR_G: 0.000064 | noise=0.0180 | Time: 125.3s
+Epoch [ 84/200] | D: 0.7196 | G: 1.3150 | GP: 0.0000 | D_real: 93.89% | D_fake: 80.16% | LR_G: 0.000063 | noise=0.0170 | Time: 125.3s
+Epoch [ 85/200] | D: 0.7133 | G: 1.3184 | GP: 0.0000 | D_real: 93.59% | D_fake: 80.71% | LR_G: 0.000062 | noise=0.0160 | Time: 125.4s
+Epoch [ 86/200] | D: 0.7048 | G: 1.3157 | GP: 0.0000 | D_real: 93.61% | D_fake: 81.14% | LR_G: 0.000061 | noise=0.0150 | Time: 125.4s
+Epoch [ 87/200] | D: 0.7016 | G: 1.3127 | GP: 0.0000 | D_real: 93.40% | D_fake: 81.44% | LR_G: 0.000061 | noise=0.0140 | Time: 125.4s
+Epoch [ 88/200] | D: 0.6912 | G: 1.3335 | GP: 0.0000 | D_real: 93.97% | D_fake: 81.57% | LR_G: 0.000060 | noise=0.0130 | Time: 125.3s
+Epoch [ 89/200] | D: 0.6889 | G: 1.3347 | GP: 0.0000 | D_real: 93.86% | D_fake: 81.55% | LR_G: 0.000059 | noise=0.0120 | Time: 125.4s
+Epoch [ 90/200] | D: 0.6863 | G: 1.3541 | GP: 0.0000 | D_real: 94.13% | D_fake: 81.54% | LR_G: 0.000058 | noise=0.0110 | Time: 125.3s
+Epoch [ 91/200] | D: 0.6775 | G: 1.3549 | GP: 0.0000 | D_real: 94.03% | D_fake: 81.86% | LR_G: 0.000057 | noise=0.0100 | Time: 125.5s
+Epoch [ 92/200] | D: 0.6756 | G: 1.3600 | GP: 0.0000 | D_real: 94.15% | D_fake: 81.78% | LR_G: 0.000057 | noise=0.0090 | Time: 125.5s
+Epoch [ 93/200] | D: 0.6710 | G: 1.3677 | GP: 0.0000 | D_real: 94.17% | D_fake: 82.06% | LR_G: 0.000056 | noise=0.0080 | Time: 125.4s
+Epoch [ 94/200] | D: 0.6660 | G: 1.3705 | GP: 0.0000 | D_real: 94.30% | D_fake: 82.11% | LR_G: 0.000055 | noise=0.0070 | Time: 125.3s
+Epoch [ 95/200] | D: 0.6543 | G: 1.3741 | GP: 0.0000 | D_real: 94.54% | D_fake: 82.47% | LR_G: 0.000054 | noise=0.0060 | Time: 125.4s
+Epoch [ 96/200] | D: 0.6507 | G: 1.3859 | GP: 0.0000 | D_real: 94.49% | D_fake: 82.61% | LR_G: 0.000054 | noise=0.0050 | Time: 125.3s
+Epoch [ 97/200] | D: 0.6515 | G: 1.3837 | GP: 0.0000 | D_real: 94.22% | D_fake: 82.75% | LR_G: 0.000053 | noise=0.0040 | Time: 125.4s
+Epoch [ 98/200] | D: 0.6433 | G: 1.3860 | GP: 0.0000 | D_real: 94.46% | D_fake: 83.19% | LR_G: 0.000052 | noise=0.0030 | Time: 125.3s
+Epoch [ 99/200] | D: 0.6364 | G: 1.3977 | GP: 0.0000 | D_real: 94.55% | D_fake: 83.14% | LR_G: 0.000051 | noise=0.0020 | Time: 125.3s
+Epoch [100/200] | D: 0.6400 | G: 1.3809 | GP: 0.0000 | D_real: 94.34% | D_fake: 83.19% | LR_G: 0.000050 | noise=0.0010 | Time: 125.4s
+  Checkpoint saved: checkpoints/improved_epoch_0100.pt
+Epoch [101/200] | D: 0.6192 | G: 1.3783 | GP: 0.0000 | D_real: 94.31% | D_fake: 84.24% | LR_G: 0.000050 | noise=0.0000 | Time: 125.5s
+Epoch [102/200] | D: 0.6264 | G: 1.4049 | GP: 0.0000 | D_real: 94.63% | D_fake: 83.47% | LR_G: 0.000049 | noise=0.0000 | Time: 125.3s
+Epoch [103/200] | D: 0.6170 | G: 1.3997 | GP: 0.0000 | D_real: 94.31% | D_fake: 84.20% | LR_G: 0.000048 | noise=0.0000 | Time: 125.3s
+Epoch [104/200] | D: 0.6118 | G: 1.4017 | GP: 0.0000 | D_real: 94.59% | D_fake: 84.15% | LR_G: 0.000047 | noise=0.0000 | Time: 125.3s
+Epoch [105/200] | D: 0.6099 | G: 1.4016 | GP: 0.0000 | D_real: 94.57% | D_fake: 84.00% | LR_G: 0.000047 | noise=0.0000 | Time: 125.3s
+Epoch [106/200] | D: 0.5969 | G: 1.4123 | GP: 0.0000 | D_real: 94.73% | D_fake: 84.62% | LR_G: 0.000046 | noise=0.0000 | Time: 125.3s
+Epoch [107/200] | D: 0.5987 | G: 1.4078 | GP: 0.0000 | D_real: 94.61% | D_fake: 84.54% | LR_G: 0.000045 | noise=0.0000 | Time: 125.3s
+Epoch [108/200] | D: 0.5923 | G: 1.3980 | GP: 0.0000 | D_real: 94.02% | D_fake: 85.38% | LR_G: 0.000044 | noise=0.0000 | Time: 125.3s
+Epoch [109/200] | D: 0.5911 | G: 1.4233 | GP: 0.0000 | D_real: 94.55% | D_fake: 84.91% | LR_G: 0.000044 | noise=0.0000 | Time: 125.3s
+Epoch [110/200] | D: 0.5869 | G: 1.4292 | GP: 0.0000 | D_real: 94.68% | D_fake: 85.04% | LR_G: 0.000043 | noise=0.0000 | Time: 125.3s
+Epoch [111/200] | D: 0.5822 | G: 1.4264 | GP: 0.0000 | D_real: 94.66% | D_fake: 85.34% | LR_G: 0.000042 | noise=0.0000 | Time: 125.5s
+Epoch [112/200] | D: 0.5730 | G: 1.4203 | GP: 0.0000 | D_real: 94.64% | D_fake: 85.58% | LR_G: 0.000041 | noise=0.0000 | Time: 125.3s
+Epoch [113/200] | D: 0.5703 | G: 1.4278 | GP: 0.0000 | D_real: 94.63% | D_fake: 85.57% | LR_G: 0.000040 | noise=0.0000 | Time: 125.3s
+Epoch [114/200] | D: 0.5636 | G: 1.4355 | GP: 0.0000 | D_real: 94.84% | D_fake: 85.79% | LR_G: 0.000040 | noise=0.0000 | Time: 125.3s
+Epoch [115/200] | D: 0.5525 | G: 1.4413 | GP: 0.0000 | D_real: 94.78% | D_fake: 86.23% | LR_G: 0.000039 | noise=0.0000 | Time: 125.3s
+Epoch [116/200] | D: 0.5555 | G: 1.4364 | GP: 0.0000 | D_real: 94.94% | D_fake: 86.00% | LR_G: 0.000038 | noise=0.0000 | Time: 125.3s
+Epoch [117/200] | D: 0.5401 | G: 1.4387 | GP: 0.0000 | D_real: 95.01% | D_fake: 86.97% | LR_G: 0.000037 | noise=0.0000 | Time: 125.3s
+Epoch [118/200] | D: 0.5440 | G: 1.4332 | GP: 0.0000 | D_real: 94.97% | D_fake: 86.27% | LR_G: 0.000037 | noise=0.0000 | Time: 125.3s
+Epoch [119/200] | D: 0.5364 | G: 1.4492 | GP: 0.0000 | D_real: 94.92% | D_fake: 86.92% | LR_G: 0.000036 | noise=0.0000 | Time: 125.3s
+Epoch [120/200] | D: 0.5388 | G: 1.4541 | GP: 0.0000 | D_real: 94.91% | D_fake: 86.64% | LR_G: 0.000035 | noise=0.0000 | Time: 125.3s
+Epoch [121/200] | D: 0.5297 | G: 1.4511 | GP: 0.0000 | D_real: 94.83% | D_fake: 87.19% | LR_G: 0.000034 | noise=0.0000 | Time: 125.5s
+Epoch [122/200] | D: 0.5299 | G: 1.4362 | GP: 0.0000 | D_real: 94.69% | D_fake: 87.24% | LR_G: 0.000034 | noise=0.0000 | Time: 125.3s
+Epoch [123/200] | D: 0.5234 | G: 1.4465 | GP: 0.0000 | D_real: 95.03% | D_fake: 87.13% | LR_G: 0.000033 | noise=0.0000 | Time: 125.4s
+Epoch [124/200] | D: 0.5172 | G: 1.4468 | GP: 0.0000 | D_real: 94.92% | D_fake: 87.73% | LR_G: 0.000032 | noise=0.0000 | Time: 125.3s
+Epoch [125/200] | D: 0.5090 | G: 1.4630 | GP: 0.0000 | D_real: 94.80% | D_fake: 88.20% | LR_G: 0.000032 | noise=0.0000 | Time: 125.3s
+  Checkpoint saved: checkpoints/improved_epoch_0125.pt
+Epoch [126/200] | D: 0.5114 | G: 1.4588 | GP: 0.0000 | D_real: 94.91% | D_fake: 87.68% | LR_G: 0.000031 | noise=0.0000 | Time: 125.6s
+Epoch [127/200] | D: 0.5100 | G: 1.4470 | GP: 0.0000 | D_real: 95.04% | D_fake: 87.70% | LR_G: 0.000030 | noise=0.0000 | Time: 125.3s
+Epoch [128/200] | D: 0.5015 | G: 1.4552 | GP: 0.0000 | D_real: 94.85% | D_fake: 88.24% | LR_G: 0.000029 | noise=0.0000 | Time: 125.3s
+Epoch [129/200] | D: 0.4926 | G: 1.4648 | GP: 0.0000 | D_real: 94.99% | D_fake: 88.49% | LR_G: 0.000029 | noise=0.0000 | Time: 125.4s
+Epoch [130/200] | D: 0.4962 | G: 1.4543 | GP: 0.0000 | D_real: 94.85% | D_fake: 88.40% | LR_G: 0.000028 | noise=0.0000 | Time: 125.3s
+Epoch [131/200] | D: 0.4862 | G: 1.4582 | GP: 0.0000 | D_real: 94.93% | D_fake: 88.90% | LR_G: 0.000027 | noise=0.0000 | Time: 125.5s
+Epoch [132/200] | D: 0.4840 | G: 1.4649 | GP: 0.0000 | D_real: 95.04% | D_fake: 88.78% | LR_G: 0.000027 | noise=0.0000 | Time: 125.3s
+Epoch [133/200] | D: 0.4828 | G: 1.4638 | GP: 0.0000 | D_real: 95.08% | D_fake: 88.74% | LR_G: 0.000026 | noise=0.0000 | Time: 125.3s
+Epoch [134/200] | D: 0.4758 | G: 1.4718 | GP: 0.0000 | D_real: 94.97% | D_fake: 89.25% | LR_G: 0.000025 | noise=0.0000 | Time: 125.3s
+Epoch [135/200] | D: 0.4728 | G: 1.4636 | GP: 0.0000 | D_real: 95.20% | D_fake: 89.15% | LR_G: 0.000025 | noise=0.0000 | Time: 125.3s
+Epoch [136/200] | D: 0.4718 | G: 1.4616 | GP: 0.0000 | D_real: 94.95% | D_fake: 89.40% | LR_G: 0.000024 | noise=0.0000 | Time: 125.3s
+Epoch [137/200] | D: 0.4617 | G: 1.4687 | GP: 0.0000 | D_real: 94.93% | D_fake: 89.74% | LR_G: 0.000023 | noise=0.0000 | Time: 125.3s
+Epoch [138/200] | D: 0.4642 | G: 1.4677 | GP: 0.0000 | D_real: 94.93% | D_fake: 89.58% | LR_G: 0.000023 | noise=0.0000 | Time: 125.4s
+Epoch [139/200] | D: 0.4566 | G: 1.4615 | GP: 0.0000 | D_real: 94.90% | D_fake: 89.99% | LR_G: 0.000022 | noise=0.0000 | Time: 125.3s
+Epoch [140/200] | D: 0.4520 | G: 1.4779 | GP: 0.0000 | D_real: 95.04% | D_fake: 90.02% | LR_G: 0.000021 | noise=0.0000 | Time: 125.4s
+Epoch [141/200] | D: 0.4430 | G: 1.4613 | GP: 0.0000 | D_real: 94.75% | D_fake: 90.56% | LR_G: 0.000021 | noise=0.0000 | Time: 125.5s
+Epoch [142/200] | D: 0.4472 | G: 1.4737 | GP: 0.0000 | D_real: 94.80% | D_fake: 90.45% | LR_G: 0.000020 | noise=0.0000 | Time: 125.4s
+Epoch [143/200] | D: 0.4402 | G: 1.4644 | GP: 0.0000 | D_real: 94.87% | D_fake: 90.78% | LR_G: 0.000020 | noise=0.0000 | Time: 125.3s
+Epoch [144/200] | D: 0.4380 | G: 1.4661 | GP: 0.0000 | D_real: 94.98% | D_fake: 90.72% | LR_G: 0.000019 | noise=0.0000 | Time: 125.4s
+Epoch [145/200] | D: 0.4403 | G: 1.4716 | GP: 0.0000 | D_real: 94.96% | D_fake: 90.67% | LR_G: 0.000018 | noise=0.0000 | Time: 125.3s
+Epoch [146/200] | D: 0.4316 | G: 1.4673 | GP: 0.0000 | D_real: 94.71% | D_fake: 90.99% | LR_G: 0.000018 | noise=0.0000 | Time: 125.4s
+Epoch [147/200] | D: 0.4281 | G: 1.4722 | GP: 0.0000 | D_real: 94.75% | D_fake: 91.18% | LR_G: 0.000017 | noise=0.0000 | Time: 125.5s
+Epoch [148/200] | D: 0.4266 | G: 1.4588 | GP: 0.0000 | D_real: 94.56% | D_fake: 91.52% | LR_G: 0.000017 | noise=0.0000 | Time: 125.4s
+Epoch [149/200] | D: 0.4214 | G: 1.4634 | GP: 0.0000 | D_real: 94.73% | D_fake: 91.55% | LR_G: 0.000016 | noise=0.0000 | Time: 125.5s
+Epoch [150/200] | D: 0.4215 | G: 1.4690 | GP: 0.0000 | D_real: 94.69% | D_fake: 91.53% | LR_G: 0.000015 | noise=0.0000 | Time: 125.3s
+  Checkpoint saved: checkpoints/improved_epoch_0150.pt
+Epoch [151/200] | D: 0.4122 | G: 1.4636 | GP: 0.0000 | D_real: 94.66% | D_fake: 91.79% | LR_G: 0.000015 | noise=0.0000 | Time: 125.5s
+Epoch [152/200] | D: 0.4131 | G: 1.4660 | GP: 0.0000 | D_real: 94.68% | D_fake: 91.94% | LR_G: 0.000014 | noise=0.0000 | Time: 125.3s
+Epoch [153/200] | D: 0.4076 | G: 1.4601 | GP: 0.0000 | D_real: 94.64% | D_fake: 92.14% | LR_G: 0.000014 | noise=0.0000 | Time: 125.4s
+Epoch [154/200] | D: 0.4048 | G: 1.4556 | GP: 0.0000 | D_real: 94.36% | D_fake: 92.44% | LR_G: 0.000013 | noise=0.0000 | Time: 125.4s
+Epoch [155/200] | D: 0.4057 | G: 1.4648 | GP: 0.0000 | D_real: 94.52% | D_fake: 92.24% | LR_G: 0.000013 | noise=0.0000 | Time: 125.4s
+Epoch [156/200] | D: 0.4030 | G: 1.4600 | GP: 0.0000 | D_real: 94.52% | D_fake: 92.40% | LR_G: 0.000012 | noise=0.0000 | Time: 125.4s
+Epoch [157/200] | D: 0.3963 | G: 1.4603 | GP: 0.0000 | D_real: 94.31% | D_fake: 92.77% | LR_G: 0.000012 | noise=0.0000 | Time: 125.4s
+Epoch [158/200] | D: 0.3908 | G: 1.4417 | GP: 0.0000 | D_real: 94.26% | D_fake: 93.20% | LR_G: 0.000011 | noise=0.0000 | Time: 125.3s
+Epoch [159/200] | D: 0.3924 | G: 1.4529 | GP: 0.0000 | D_real: 94.31% | D_fake: 92.91% | LR_G: 0.000011 | noise=0.0000 | Time: 125.3s
+Epoch [160/200] | D: 0.3886 | G: 1.4465 | GP: 0.0000 | D_real: 94.10% | D_fake: 93.21% | LR_G: 0.000010 | noise=0.0000 | Time: 125.4s
+Epoch [161/200] | D: 0.3913 | G: 1.4661 | GP: 0.0000 | D_real: 94.54% | D_fake: 92.90% | LR_G: 0.000010 | noise=0.0000 | Time: 125.5s
+Epoch [162/200] | D: 0.3881 | G: 1.4456 | GP: 0.0000 | D_real: 94.35% | D_fake: 93.20% | LR_G: 0.000010 | noise=0.0000 | Time: 125.3s
+Epoch [163/200] | D: 0.3845 | G: 1.4471 | GP: 0.0000 | D_real: 94.22% | D_fake: 93.16% | LR_G: 0.000009 | noise=0.0000 | Time: 125.4s
+Epoch [164/200] | D: 0.3827 | G: 1.4345 | GP: 0.0000 | D_real: 94.08% | D_fake: 93.62% | LR_G: 0.000009 | noise=0.0000 | Time: 125.4s
+Epoch [165/200] | D: 0.3824 | G: 1.4273 | GP: 0.0000 | D_real: 94.04% | D_fake: 93.70% | LR_G: 0.000008 | noise=0.0000 | Time: 125.3s
+Epoch [166/200] | D: 0.3815 | G: 1.4270 | GP: 0.0000 | D_real: 93.85% | D_fake: 93.66% | LR_G: 0.000008 | noise=0.0000 | Time: 125.4s
+Epoch [167/200] | D: 0.3797 | G: 1.4281 | GP: 0.0000 | D_real: 93.79% | D_fake: 93.85% | LR_G: 0.000008 | noise=0.0000 | Time: 125.4s
+Epoch [168/200] | D: 0.3815 | G: 1.4168 | GP: 0.0000 | D_real: 93.80% | D_fake: 93.84% | LR_G: 0.000007 | noise=0.0000 | Time: 125.3s
+Epoch [169/200] | D: 0.3762 | G: 1.4315 | GP: 0.0000 | D_real: 93.92% | D_fake: 94.00% | LR_G: 0.000007 | noise=0.0000 | Time: 125.3s
+Epoch [170/200] | D: 0.3803 | G: 1.4134 | GP: 0.0000 | D_real: 93.81% | D_fake: 93.96% | LR_G: 0.000006 | noise=0.0000 | Time: 125.3s
+Epoch [171/200] | D: 0.3732 | G: 1.4141 | GP: 0.0000 | D_real: 93.62% | D_fake: 94.48% | LR_G: 0.000006 | noise=0.0000 | Time: 125.5s
+Epoch [172/200] | D: 0.3753 | G: 1.4147 | GP: 0.0000 | D_real: 93.55% | D_fake: 94.32% | LR_G: 0.000006 | noise=0.0000 | Time: 125.4s
+Epoch [173/200] | D: 0.3740 | G: 1.4230 | GP: 0.0000 | D_real: 93.63% | D_fake: 94.26% | LR_G: 0.000005 | noise=0.0000 | Time: 125.3s
+Epoch [174/200] | D: 0.3687 | G: 1.4057 | GP: 0.0000 | D_real: 93.65% | D_fake: 94.65% | LR_G: 0.000005 | noise=0.0000 | Time: 125.3s
+Epoch [175/200] | D: 0.3710 | G: 1.4093 | GP: 0.0000 | D_real: 93.52% | D_fake: 94.60% | LR_G: 0.000005 | noise=0.0000 | Time: 125.4s
+  Checkpoint saved: checkpoints/improved_epoch_0175.pt
+Epoch [176/200] | D: 0.3720 | G: 1.4119 | GP: 0.0000 | D_real: 93.42% | D_fake: 94.53% | LR_G: 0.000004 | noise=0.0000 | Time: 125.5s
+Epoch [177/200] | D: 0.3710 | G: 1.3999 | GP: 0.0000 | D_real: 93.43% | D_fake: 94.71% | LR_G: 0.000004 | noise=0.0000 | Time: 125.5s
+Epoch [178/200] | D: 0.3713 | G: 1.4058 | GP: 0.0000 | D_real: 93.42% | D_fake: 94.66% | LR_G: 0.000004 | noise=0.0000 | Time: 125.4s
+Epoch [179/200] | D: 0.3706 | G: 1.3977 | GP: 0.0000 | D_real: 93.33% | D_fake: 94.68% | LR_G: 0.000004 | noise=0.0000 | Time: 125.4s
+Epoch [180/200] | D: 0.3702 | G: 1.4006 | GP: 0.0000 | D_real: 93.31% | D_fake: 94.72% | LR_G: 0.000003 | noise=0.0000 | Time: 125.3s
+Epoch [181/200] | D: 0.3696 | G: 1.4154 | GP: 0.0000 | D_real: 93.29% | D_fake: 94.87% | LR_G: 0.000003 | noise=0.0000 | Time: 125.5s
+Epoch [182/200] | D: 0.3682 | G: 1.4145 | GP: 0.0000 | D_real: 93.32% | D_fake: 94.81% | LR_G: 0.000003 | noise=0.0000 | Time: 125.4s
+Epoch [183/200] | D: 0.3667 | G: 1.4071 | GP: 0.0000 | D_real: 93.22% | D_fake: 94.91% | LR_G: 0.000003 | noise=0.0000 | Time: 125.3s
+Epoch [184/200] | D: 0.3740 | G: 1.4004 | GP: 0.0000 | D_real: 93.21% | D_fake: 94.71% | LR_G: 0.000003 | noise=0.0000 | Time: 125.3s
+Epoch [185/200] | D: 0.3711 | G: 1.4089 | GP: 0.0000 | D_real: 93.18% | D_fake: 94.81% | LR_G: 0.000002 | noise=0.0000 | Time: 125.3s
+Epoch [186/200] | D: 0.3752 | G: 1.4088 | GP: 0.0000 | D_real: 92.96% | D_fake: 94.83% | LR_G: 0.000002 | noise=0.0000 | Time: 125.3s
+Epoch [187/200] | D: 0.3743 | G: 1.3983 | GP: 0.0000 | D_real: 93.17% | D_fake: 94.78% | LR_G: 0.000002 | noise=0.0000 | Time: 125.3s
+Epoch [188/200] | D: 0.3744 | G: 1.4142 | GP: 0.0000 | D_real: 92.92% | D_fake: 94.88% | LR_G: 0.000002 | noise=0.0000 | Time: 125.3s
+Epoch [189/200] | D: 0.3759 | G: 1.4088 | GP: 0.0000 | D_real: 93.03% | D_fake: 94.87% | LR_G: 0.000002 | noise=0.0000 | Time: 125.3s
+Epoch [190/200] | D: 0.3711 | G: 1.3998 | GP: 0.0000 | D_real: 92.97% | D_fake: 95.02% | LR_G: 0.000002 | noise=0.0000 | Time: 125.3s
+Epoch [191/200] | D: 0.3723 | G: 1.4017 | GP: 0.0000 | D_real: 93.13% | D_fake: 94.96% | LR_G: 0.000001 | noise=0.0000 | Time: 125.5s
+Epoch [192/200] | D: 0.3694 | G: 1.3952 | GP: 0.0000 | D_real: 93.11% | D_fake: 95.04% | LR_G: 0.000001 | noise=0.0000 | Time: 125.4s
+Epoch [193/200] | D: 0.3763 | G: 1.3968 | GP: 0.0000 | D_real: 93.17% | D_fake: 94.61% | LR_G: 0.000001 | noise=0.0000 | Time: 125.5s
+Epoch [194/200] | D: 0.3706 | G: 1.4023 | GP: 0.0000 | D_real: 92.88% | D_fake: 95.15% | LR_G: 0.000001 | noise=0.0000 | Time: 125.5s
+Epoch [195/200] | D: 0.3754 | G: 1.4047 | GP: 0.0000 | D_real: 92.95% | D_fake: 94.83% | LR_G: 0.000001 | noise=0.0000 | Time: 125.4s
+Epoch [196/200] | D: 0.3717 | G: 1.4041 | GP: 0.0000 | D_real: 92.94% | D_fake: 95.06% | LR_G: 0.000001 | noise=0.0000 | Time: 125.4s
+Epoch [197/200] | D: 0.3778 | G: 1.3961 | GP: 0.0000 | D_real: 92.88% | D_fake: 94.87% | LR_G: 0.000001 | noise=0.0000 | Time: 125.4s
+Epoch [198/200] | D: 0.3775 | G: 1.4040 | GP: 0.0000 | D_real: 93.01% | D_fake: 94.88% | LR_G: 0.000001 | noise=0.0000 | Time: 125.5s
+Epoch [199/200] | D: 0.3770 | G: 1.4060 | GP: 0.0000 | D_real: 92.95% | D_fake: 94.87% | LR_G: 0.000001 | noise=0.0000 | Time: 125.4s
+Epoch [200/200] | D: 0.3757 | G: 1.4023 | GP: 0.0000 | D_real: 92.91% | D_fake: 95.02% | LR_G: 0.000001 | noise=0.0000 | Time: 125.3s
+  Checkpoint saved: checkpoints/improved_epoch_0200.pt
+
+Generating final evaluation visualizations...
+
+Training complete. Results saved to results/
+Finished: Sa 14. Feb 20:02:18 CET 2026
