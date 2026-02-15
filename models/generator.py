@@ -163,6 +163,12 @@ class ImprovedGenerator(nn.Module):
                 nn.init.orthogonal_(m.weight, gain=1.0)
                 if m.bias is not None:
                     nn.init.zeros_(m.bias)
+        # Scale down final conv to prevent Tanh saturation at initialization.
+        # With 64 input channels and 3x3 kernels, orthogonal init produces outputs
+        # whose magnitude can exceed 3, permanently saturating Tanh (grad ≈ 0).
+        # Scaling by 0.1 keeps initial pre-Tanh activations in the linear regime.
+        with torch.no_grad():
+            self.final_conv.weight.mul_(0.1)
 
     def forward(self, z: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
         # Project and reshape: (B, latent_dim) -> (B, C, 4, 4)

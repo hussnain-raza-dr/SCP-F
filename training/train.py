@@ -184,6 +184,12 @@ def train(config: dict, arch: str, resume_path: str = None):
         # ---- Save samples every 10 epochs ----
         if (epoch + 1) % 10 == 0 or epoch == 0:
             samples = model.generate(fixed_labels, fixed_z)
+
+            # Monitor Tanh saturation: fraction of pixels at ±1
+            sat_ratio = (samples.abs() > 0.99).float().mean().item()
+            print(f"  Saturation ratio: {sat_ratio:.2%}"
+                  f"{' *** WARNING: likely Tanh saturation' if sat_ratio > 0.3 else ''}")
+
             save_image_grid(
                 samples,
                 results_dir / f"samples_epoch_{epoch+1:04d}.png",
