@@ -56,7 +56,7 @@ BASE_CONFIG = {
         "lr_g": 0.0001,
         "lr_d": 0.0004,
         "beta1": 0.0,
-        "beta2": 0.9,
+        "beta2": 0.999,
         "n_critic": 5,
         "gp_lambda": 10.0,
         "loss_type": "wgan-gp",

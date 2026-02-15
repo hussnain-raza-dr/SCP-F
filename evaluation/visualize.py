@@ -38,7 +38,8 @@ def save_image_grid(
     grid = make_grid(images, nrow=nrow, padding=2, normalize=False)
     np_grid = grid.permute(1, 2, 0).numpy()
 
-    fig, ax = plt.subplots(figsize=(nrow * 1.2, (len(images) // nrow + 1) * 1.2))
+    nrows = (len(images) + nrow - 1) // nrow
+    fig, ax = plt.subplots(figsize=(nrow * 1.2, nrows * 1.2))
     ax.imshow(np_grid)
     ax.axis("off")
     if title:

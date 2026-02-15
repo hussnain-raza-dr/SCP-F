@@ -168,7 +168,7 @@ class cGAN(nn.Module):
 
         # Add instance noise to fake images
         fake_noisy = self._add_instance_noise(fake_images)
-        fake_scores = self.D(fake_noisy.detach(), labels)
+        fake_scores = self.D(fake_noisy, labels)
 
         # Adversarial loss
         d_loss = self.criterion.d_loss(real_scores, fake_scores)
@@ -279,7 +279,7 @@ class cGAN(nn.Module):
         torch.save(state, path)
 
     def load_checkpoint(self, path: str) -> int:
-        ckpt = torch.load(path, map_location=self.device)
+        ckpt = torch.load(path, map_location=self.device, weights_only=False)
         self.G.load_state_dict(ckpt["G_state"])
         self.D.load_state_dict(ckpt["D_state"])
         self.opt_G.load_state_dict(ckpt["opt_G_state"])
