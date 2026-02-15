@@ -14,7 +14,10 @@ Key design choices vs. baseline:
 
 3. NO spectral normalization in the generator (SN is for D only).
    - Why: Standard in BigGAN/SN-GAN. ConditionalBN handles normalization in G.
-     SN on G limits expressivity and causes Tanh saturation at the output layer.
+     SN on G's final conv is counterproductive: it constrains ||W||_op=1, but
+     with 64 BN-normalized input channels, ||x||_2 ≈ sqrt(64) ≈ 8, allowing
+     pre-Tanh outputs up to ~8 → permanent saturation. A small-init plain conv
+     keeps initial outputs in the linear regime and lets the optimizer learn.
 
 4. Nearest-neighbor upsampling + Conv2d instead of ConvTranspose2d.
    - Why: Avoids checkerboard artifacts common with ConvTranspose2d.
@@ -122,7 +125,7 @@ class ImprovedGenerator(nn.Module):
       SelfAttention at 8x8
       ResBlockUp 256->128  (8->16)
       ResBlockUp 128->64   (16->32)
-      BN + Conv2d(SN, 64, 3) + Tanh  (no ReLU — centered inputs prevent saturation)
+      BN + Conv2d(64, 3, gain=0.1) + Tanh  (no SN — small init prevents saturation)
     """
     def __init__(
         self,
@@ -146,14 +149,15 @@ class ImprovedGenerator(nn.Module):
         # Self-attention after first upsampling (8x8 resolution)
         self.attn = SelfAttention(base_channels)
 
-        # Final output layer: BN → Conv(SN) → Tanh.
-        # SN on the final conv is the ONLY SN in G — it structurally prevents
-        # Tanh saturation. No ReLU: BN gives centered ~N(0,1) inputs, so the
-        # dot product w·x involves cancellations → output stays ~N(0, ||w||²)
-        # ≈ N(0,1). With ReLU, all-positive inputs would sum constructively
-        # → output magnitude ~sqrt(fan_in) → permanent Tanh saturation.
+        # Final output layer: BN → Conv → Tanh.
+        # NO spectral norm here. SN constrains ||W||_op=1, but with 64 input
+        # channels after BN (each ~N(0,1)), ||x||_2 ≈ sqrt(64) ≈ 8, so SN
+        # still allows pre-Tanh outputs up to ~8 → permanent saturation.
+        # Instead, use a plain conv with small init (gain=0.1) so initial
+        # outputs stay in Tanh's linear regime, and let the optimizer learn
+        # the appropriate scale during training.
         self.final_bn = nn.BatchNorm2d(base_channels // 4)
-        self.final_conv = spectral_norm(nn.Conv2d(base_channels // 4, 3, 3, padding=1))
+        self.final_conv = nn.Conv2d(base_channels // 4, 3, 3, padding=1)
 
         self._init_weights()
 
@@ -163,10 +167,10 @@ class ImprovedGenerator(nn.Module):
                 nn.init.orthogonal_(m.weight, gain=1.0)
                 if m.bias is not None:
                     nn.init.zeros_(m.bias)
-        # Scale down final conv to prevent Tanh saturation at initialization.
-        # With 64 input channels and 3x3 kernels, orthogonal init produces outputs
-        # whose magnitude can exceed 3, permanently saturating Tanh (grad ≈ 0).
-        # Scaling by 0.1 keeps initial pre-Tanh activations in the linear regime.
+        # Scale down final conv to prevent Tanh saturation.
+        # Without SN, this scaling persists and keeps initial pre-Tanh
+        # activations in the linear regime (|x| < 1). The optimizer can
+        # then gradually increase weights as needed during training.
         with torch.no_grad():
             self.final_conv.weight.mul_(0.1)
 
@@ -180,7 +184,7 @@ class ImprovedGenerator(nn.Module):
         x = self.res2(x, labels)   # 16x16
         x = self.res3(x, labels)   # 32x32
 
-        # Output: BN → Conv(SN) → Tanh (no ReLU — keeps inputs centered)
+        # Output: BN → Conv (small init, no SN) → Tanh
         x = self.final_bn(x)
         x = torch.tanh(self.final_conv(x))
         return x

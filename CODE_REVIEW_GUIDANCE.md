@@ -116,43 +116,32 @@ preventing complete D dominance, and removing it halfway through training is too
 
 ## Recommended Fixes (In Order of Priority)
 
-### Fix 1: Prevent Tanh Saturation — Small-Gain Final Layer
+### Fix 1: Prevent Tanh Saturation — Remove SN from Final Conv + Small Init
 
-**The single most important fix.** Replace the current output layer with a properly scaled one.
+**The single most important fix.** The original Option A (scaling init with SN still
+present) DOES NOT WORK because spectral norm re-normalizes weights at every forward
+pass: `W_sn = W / σ(W)`. Scaling W by 0.1 just gives `0.1W / σ(0.1W) = W / σ(W)` —
+the scaling is completely cancelled out.
 
-**In `models/generator.py`**, change the final layer initialization:
+**The correct fix is to remove SN from the final conv entirely:**
 
 ```python
-# Option A: Scale down the final conv weights after init
-def _init_weights(self):
-    for m in self.modules():
-        if isinstance(m, (nn.Conv2d, nn.Linear)):
-            nn.init.orthogonal_(m.weight, gain=1.0)
-            if m.bias is not None:
-                nn.init.zeros_(m.bias)
-    # Ensure initial Tanh inputs are small (linear regime)
-    with torch.no_grad():
-        self.final_conv.weight.mul_(0.1)
+# In __init__:
+self.final_conv = nn.Conv2d(base_channels // 4, 3, 3, padding=1)  # No spectral_norm
+
+# In _init_weights:
+with torch.no_grad():
+    self.final_conv.weight.mul_(0.1)  # Now this actually persists
 ```
 
-**OR Option B: Remove SN from final conv, add a learnable gain parameter:**
-```python
-# Replace spectral_norm final conv with a plain conv + small init
-self.final_conv = nn.Conv2d(base_channels // 4, 3, 3, padding=1)
-nn.init.xavier_uniform_(self.final_conv.weight, gain=0.1)
-```
+**Why SN on the final conv causes saturation:**
+- After BN, each of 64 input channels is ~N(0,1)
+- The input vector per pixel has ||x||_2 ≈ sqrt(64) ≈ 8
+- SN constrains ||W||_op = 1, so output ≤ ||W||_op * ||x||_2 ≈ 8
+- Tanh(8) ≈ 1.0000 — permanent saturation, zero gradient
 
-**OR Option C: Add a 0.1x scaling factor before Tanh:**
-```python
-def forward(self, z, labels):
-    ...
-    x = self.final_bn(x)
-    x = torch.tanh(0.1 * self.final_conv(x))  # Scale pre-activation
-    return x
-```
-
-Option A is recommended — it preserves the existing architecture while ensuring
-the initial outputs stay in Tanh's linear regime (|x| < 1).
+Without SN, the 0.1x scaling persists and initial pre-Tanh values stay in
+the linear regime (|x| < 1). The optimizer can gradually grow weights as needed.
 
 ### Fix 2: Rebalance G/D Capacity
 
