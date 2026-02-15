@@ -1,0 +1,43 @@
+Started: So 15. Feb 03:56:36 CET 2026
+Sun Feb 15 03:56:36 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 590.48.01              Driver Version: 590.48.01      CUDA Version: 13.1     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  Quadro RTX 5000                On  |   00000000:AF:00.0 Off |                  Off |
+| 33%   24C    P8              9W /  230W |      19MiB /  16384MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|    0   N/A  N/A            4032      G   /usr/libexec/Xorg                        16MiB |
++-----------------------------------------------------------------------------------------+
+Using device: cuda
+GPU: Quadro RTX 5000
+GPU memory: 16.7 GB
+Dataset: 50000 training images, 10 classes
+Generator parameters:     2,474,692
+Discriminator parameters: 9,829,922
+G/D parameter ratio:      0.25
+EMA enabled (decay=0.999)
+Resumed from checkpoints/improved_epoch_0200.pt at epoch 200
+
+============================================================
+Training improved cGAN for 200 epochs
+Loss: hinge, n_critic=2
+LR_G: 0.0001, LR_D: 0.0004
+Instance noise: std=0.1, decay over 100 epochs
+============================================================
+
+
+Generating final evaluation visualizations...
+
+Training complete. Results saved to results/
+Finished: So 15. Feb 03:56:46 CET 2026

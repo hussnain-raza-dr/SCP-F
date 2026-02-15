@@ -1,0 +1,9 @@
+{
+  "d_loss": [],
+  "g_loss": [],
+  "gp": [],
+  "real_acc": [],
+  "fake_acc": [],
+  "lr_g": [],
+  "lr_d": []
+}
