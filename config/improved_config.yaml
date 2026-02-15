@@ -1,54 +1,54 @@
-# Improved cGAN Configuration (v9)
-# Architecture: SN-GAN style with hinge loss.
+# Improved cGAN Configuration (v10)
+# Fixes for Tanh saturation and D dominance observed in v9.
 #
-# v6-v8 all produced saturated color blocks due to three compounding issues:
-#   1. G-favored TTUR (lr_g=2×lr_d) starved D of learning capacity
-#   2. R1 penalty (gamma=2.0) actively suppressed D's gradients on real data,
-#      causing Real→Real accuracy to drop below 50%
-#   3. D base_channels=48 was too small for reliable feature extraction
+# v9 issues:
+#   1. Complete Tanh saturation from epoch 1 — all pixels pushed to ±1
+#      producing only 8 pure colors (R,G,B,C,M,Y,W,K)
+#   2. D dominance: 9.8M params vs G's 2.5M (ratio 0.25), compounded by
+#      D-favored TTUR (lr_d = 4×lr_g) and n_critic=2
+#   3. Cosine LR decay killed G learning rate before quality improved
 #
-# v9 fixes:
-#   - D-favored TTUR (lr_d=4×lr_g), matching BigGAN standard
-#   - R1 disabled (SN + hinge is sufficient for stability)
-#   - D base_channels restored to 64 for adequate capacity
-#   - n_critic=2 to give D extra training (BigGAN standard)
-#   - Generator: SN only on final conv + no ReLU (structural anti-saturation)
+# v10 fixes:
+#   - D base_channels 64→32 (reduces D from 9.8M to ~2.5M, G/D ratio ~1.0)
+#   - Equal LR (2e-4 for both G and D) — no TTUR needed when G/D balanced
+#   - n_critic=1 — D already powerful enough with SN + residual blocks
+#   - No LR schedule — let G learn throughout training
+#   - Instance noise extended to full 200 epochs
+#   - Generator final conv init scaled by 0.1x to prevent Tanh saturation
+#     (requires corresponding code change in generator.py _init_weights)
 
 model:
   architecture: improved
   latent_dim: 128
   embed_dim: 64
   generator_base_channels: 256
-  discriminator_base_channels: 64    # Restored from 48 — D needs capacity to learn
+  discriminator_base_channels: 32    # Halved from 64 to balance G/D capacity
   use_self_attention: true
   use_residual: true
 
 training:
   batch_size: 128
   num_epochs: 200
-  # D-favored TTUR (BigGAN standard: D learns 4× faster than G)
-  lr_g: 0.0001
-  lr_d: 0.0004
+  lr_g: 0.0002                       # Equal to lr_d — balanced training
+  lr_d: 0.0002                       # Reduced from 0.0004
   beta1: 0.0
-  beta2: 0.999               # BigGAN uses 0.999 (was 0.9)
-  n_critic: 2                 # Train D twice per G step (BigGAN standard)
+  beta2: 0.999
+  n_critic: 1                        # Reduced from 2 — D doesn't need extra steps
   loss_type: "hinge"
   grad_clip: 0.0
 
   # EMA
   ema_decay: 0.999
 
-  # Cosine LR scheduling
-  lr_schedule: "cosine"
+  # No LR schedule — constant LR lets G learn throughout training.
+  # Reintroduce cosine decay only after confirming generation works.
+  lr_schedule: "none"
 
-  # Instance noise
-  d_noise_std: 0.1
-  d_noise_decay_epochs: 100
+  # Instance noise — extended to full training duration
+  d_noise_std: 0.15                  # Increased from 0.1
+  d_noise_decay_epochs: 200          # Extended from 100
 
-  # R1 gradient penalty: DISABLED. R1 penalizes ||∇D(real)||², which
-  # actively suppresses D's confidence on real data. This caused
-  # Real→Real accuracy to drop below 50% in v6-v8. SN + hinge loss
-  # already provides sufficient Lipschitz regularization.
+  # R1 gradient penalty: still disabled
   r1_gamma: 0.0
   r1_every: 16
 
