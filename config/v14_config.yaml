@@ -13,14 +13,19 @@
 #
 # v14 approach: Remove Tanh entirely (modern approach, StyleGAN2-style).
 #   - G outputs raw conv values (0.1 init keeps them small initially).
-#   - D naturally constrains range: out-of-[-1,1] pixel values are trivially
-#     detectable as fake, providing a smooth gradient signal without Tanh's
-#     hard ceiling. This gives D BOTH a range signal AND structural signal,
-#     unlike v13 where the penalty removed the range signal entirely.
 #   - No saturation penalty needed — the root cause (Tanh) is gone.
-#   - n_critic=1: D should converge faster than v13 because it has the
-#     natural range signal back. TTUR (2x) provides enough D advantage.
 #   - Outputs clamped to [-1,1] at inference time for visualization only.
+#
+# v14 result (epoch 60): Colors no longer hard-saturated (Tanh fix works),
+#   but D convergence still too slow — same as v13: Real→Real ~55%,
+#   D Loss ~1.63, ~30-40% white patches. The 0.1 init keeps G outputs
+#   small initially, so there's no persistent out-of-range signal for D.
+#   D is still stuck learning structural features without an easy shortcut.
+#
+# v14.1: Increase n_critic to 2. Without the "color shortcut" from v11's
+#   Tanh saturation, D needs more update steps to learn structural features.
+#   This was committed in v13.1 but never tested. TTUR (2x) alone isn't
+#   enough — n_critic=2 effectively gives D a 4x training advantage.
 
 model:
   architecture: improved
@@ -38,7 +43,7 @@ training:
   lr_d: 0.0002                       # (v9 was 4x, v10 was 1x)
   beta1: 0.0
   beta2: 0.999
-  n_critic: 1                        # D has natural range signal — TTUR is enough
+  n_critic: 2                        # v14.1: D needs more updates without color shortcut
   loss_type: "hinge"
   grad_clip: 0.0
 
