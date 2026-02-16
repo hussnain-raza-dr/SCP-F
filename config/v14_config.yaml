@@ -37,6 +37,20 @@
 # v14.2: Increase D base channels 48 → 64. This was rejected as "too strong"
 #   in v9/v10 when D had the Tanh color shortcut. Without it, D genuinely
 #   needs the capacity (~1.8x more parameters) to learn structural features.
+#
+# v14.2 result: Beautiful convergence epochs 0-60 — natural colors,
+#   recognizable objects (birds, frogs, cars, horses), D/G losses converging
+#   toward ~1.0/~1.0. BEST RESULTS SO FAR. But after epoch 60, D became
+#   too dominant: D Loss dropped to 0.73, G Loss rose to 1.30, Real→Real
+#   hit 93%. D's gradients became uninformative, G regressed to extreme
+#   primaries. D at 64ch + n_critic=2 + TTUR 2x = too much D advantage.
+#
+# v14.3: Enable R1 gradient penalty to prevent D dominance. R1 penalizes
+#   large gradients on real data: gamma/2 * ||∇D(real)||². This keeps D's
+#   decision boundary smooth, preventing overconfidence while preserving
+#   the useful gradient signal that made epochs 30-60 so good.
+#   Also reduce n_critic to 1 — with R1 keeping D in check, n_critic=2
+#   gives D too much advantage. TTUR (2x) + R1 should be enough.
 
 model:
   architecture: improved
@@ -54,7 +68,7 @@ training:
   lr_d: 0.0002                       # (v9 was 4x, v10 was 1x)
   beta1: 0.0
   beta2: 0.999
-  n_critic: 2                        # v14.1: D needs more updates without color shortcut
+  n_critic: 1                        # v14.3: n_critic=2 too much with D=64ch + R1
   loss_type: "hinge"
   grad_clip: 0.0
 
@@ -68,8 +82,11 @@ training:
   d_noise_std: 0.1                   # Reduced from 0.15 (D needs to see cleaner images)
   d_noise_decay_epochs: 150          # Compromise: not 100 (v9) or 200 (v10)
 
-  # R1 gradient penalty: still disabled
-  r1_gamma: 0.0
+  # R1 gradient penalty: prevents D from becoming overconfident.
+  # penalty = (gamma/2) * ||∇D(real)||², applied every r1_every steps.
+  # gamma=1.0 is conservative — enough to smooth D's boundary without
+  # weakening it too much. Applied every 16 steps for efficiency.
+  r1_gamma: 1.0
   r1_every: 16
 
 data:
