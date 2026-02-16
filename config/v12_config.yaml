@@ -9,9 +9,13 @@
 #
 # v12 changes:
 #   - Spectral norm on G's final conv (persistent ||W||_op=1 constraint).
-#     With BN-normalized inputs, this bounds pre-Tanh std to ≤1, keeping
-#     activations in Tanh's responsive range throughout training.
-#   - Gradient clipping (max_norm=1.0) as additional safety net.
+#   - BN before final conv set to affine=False so its outputs truly have
+#     std=1. A learnable gamma would act as a "scaling backdoor" past the
+#     SN constraint (gamma=5 → pre-Tanh std=5 despite ||w_j||≤1).
+#   - grad_clip stays at 0.0 — clipping at 1.0 strangled the discriminator
+#     in v12-alpha (D Loss→1.7, G Loss→0.1, D acc ~55%). Typical gradient
+#     norms for a ~5.5M param D with hinge loss are 10-50, so clip=1.0
+#     reduced effective D learning rate by 10-50x.
 #   - All other hyperparameters unchanged from v11.
 
 model:
@@ -32,7 +36,7 @@ training:
   beta2: 0.999
   n_critic: 1                        # Keep at 1 — TTUR provides D advantage
   loss_type: "hinge"
-  grad_clip: 1.0                     # NEW: prevent unbounded weight growth
+  grad_clip: 0.0                     # Disabled — clip=1.0 strangled D in v12-alpha
 
   # EMA
   ema_decay: 0.999

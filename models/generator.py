@@ -17,11 +17,10 @@ Key design choices vs. baseline:
      ConditionalBN handles normalization there). However, the final conv before
      Tanh needs a *persistent* constraint to prevent saturation.
    - SN constrains ||W||_op=1. Via SVD, each row of the weight matrix then has
-     ||w_j|| ≤ 1. With BN-normalized inputs (each ~N(0,1)), the per-pixel
-     pre-Tanh std is ≤ ||w_j|| ≤ 1 — well within Tanh's usable range.
-   - Note: the worst-case bound ||Wx|| ≤ ||W||_op * ||x||_2 ≈ 8 does NOT apply
-     in expectation; it requires adversarial alignment which doesn't happen with
-     BN outputs. The expected output is much smaller.
+     ||w_j|| ≤ 1. Combined with BN(affine=False) so inputs truly have std=1,
+     the per-pixel pre-Tanh std is ≤ ||w_j|| ≤ 1 — within Tanh's usable range.
+   - Important: the BN before the final conv MUST be affine=False. A learnable
+     gamma acts as a scaling backdoor past the SN constraint (gamma=5 → std=5).
 
 4. Nearest-neighbor upsampling + Conv2d instead of ConvTranspose2d.
    - Why: Avoids checkerboard artifacts common with ConvTranspose2d.
@@ -153,15 +152,14 @@ class ImprovedGenerator(nn.Module):
         # Self-attention after first upsampling (8x8 resolution)
         self.attn = SelfAttention(base_channels)
 
-        # Final output layer: BN → SN-Conv → Tanh.
-        # SN on the final conv is critical to prevent Tanh saturation.
-        # With ||W||_op=1 (enforced by SN), each weight-matrix row has
-        # ||w_j|| ≤ 1 (via SVD). Since BN outputs are ~N(0,1) per element,
-        # the pre-Tanh std per pixel is bounded by ||w_j|| ≤ 1, keeping
-        # activations in Tanh's responsive range throughout training.
-        # (A small-init alone is insufficient: the optimizer grows weights
-        # past the initial scale, causing irreversible saturation.)
-        self.final_bn = nn.BatchNorm2d(base_channels // 4)
+        # Final output layer: BN(affine=False) → SN-Conv → Tanh.
+        # SN on the final conv prevents Tanh saturation: with ||W||_op=1,
+        # each weight-matrix row has ||w_j|| ≤ 1 (via SVD).
+        # BN must be affine=False so its outputs truly have std=1;
+        # otherwise the learnable gamma can scale inputs past the SN
+        # constraint (e.g. gamma=5 → pre-Tanh std=5 despite ||w_j||≤1).
+        # With affine=False: pre-Tanh std ≤ ||w_j|| ≤ 1 — guaranteed.
+        self.final_bn = nn.BatchNorm2d(base_channels // 4, affine=False)
         self.final_conv = nn.Conv2d(base_channels // 4, 3, 3, padding=1)
 
         self._init_weights()
