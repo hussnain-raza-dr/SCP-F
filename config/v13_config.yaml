@@ -1,0 +1,61 @@
+# Improved cGAN Configuration (v13)
+# Revert to v11 architecture + add saturation penalty to fix Tanh dead zone.
+#
+# v11: Good training dynamics (losses balanced ~1.0, Real→Real ~85%) but
+#   Tanh saturation — 0.1 weight init was only initial, optimizer grew past it.
+#
+# v12: Tried SN on G's final conv — disrupted training dynamics (D Loss
+#   1.2-1.7, G Loss 0.1-0.6) while NOT fixing saturation. The hard
+#   constraint (SN) changed the adversarial equilibrium. Abandoned.
+#
+# v13 approach: Keep v11's architecture and dynamics exactly. Add a soft
+#   saturation penalty to the G loss that penalizes |pre_tanh| > threshold.
+#   At threshold=2.0: tanh(2)=0.964 (can still reach near-±1 outputs) and
+#   tanh'(2)=0.07 (enough gradient for fine color learning). The penalty
+#   is soft — it doesn't disrupt dynamics, just nudges pre-Tanh values
+#   back when they start entering the dead zone.
+
+model:
+  architecture: improved
+  latent_dim: 128
+  embed_dim: 64
+  generator_base_channels: 256
+  discriminator_base_channels: 48    # Midpoint: 32 was too weak, 64 too strong
+  use_self_attention: true
+  use_residual: true
+
+training:
+  batch_size: 128
+  num_epochs: 200
+  lr_g: 0.0001                       # Mild TTUR: D learns 2x faster than G
+  lr_d: 0.0002                       # (v9 was 4x, v10 was 1x)
+  beta1: 0.0
+  beta2: 0.999
+  n_critic: 1                        # Keep at 1 — TTUR provides D advantage
+  loss_type: "hinge"
+  grad_clip: 0.0
+
+  # Saturation penalty: prevent pre-Tanh values from entering dead zone.
+  # penalty = weight * mean(relu(|pre_tanh| - threshold))
+  sat_penalty_weight: 0.1            # Soft nudge — comparable to G loss (~1.0)
+  sat_penalty_threshold: 2.0         # tanh(2)=0.964, tanh'(2)=0.07
+
+  # EMA
+  ema_decay: 0.999
+
+  # No LR schedule initially
+  lr_schedule: "none"
+
+  # Instance noise — extended to full training duration
+  d_noise_std: 0.1                   # Reduced from 0.15 (D needs to see cleaner images)
+  d_noise_decay_epochs: 150          # Compromise: not 100 (v9) or 200 (v10)
+
+  # R1 gradient penalty: still disabled
+  r1_gamma: 0.0
+  r1_every: 16
+
+data:
+  num_classes: 10
+  image_size: 32
+  seed: 42
+  num_workers: 2

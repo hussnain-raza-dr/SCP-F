@@ -12,15 +12,12 @@ Key design choices vs. baseline:
      consistency (e.g., coherent object shape) requires long-range dependencies.
      Self-attention lets the generator attend to distant spatial locations.
 
-3. Spectral normalization on the generator's final conv only.
-   - Why: SN on intermediate G layers is avoided (standard BigGAN practice;
-     ConditionalBN handles normalization there). However, the final conv before
-     Tanh needs a *persistent* constraint to prevent saturation.
-   - SN constrains ||W||_op=1. Via SVD, each row of the weight matrix then has
-     ||w_j|| ≤ 1. Combined with BN(affine=False) so inputs truly have std=1,
-     the per-pixel pre-Tanh std is ≤ ||w_j|| ≤ 1 — within Tanh's usable range.
-   - Important: the BN before the final conv MUST be affine=False. A learnable
-     gamma acts as a scaling backdoor past the SN constraint (gamma=5 → std=5).
+3. NO spectral normalization in the generator (SN is for D only).
+   - Why: Standard in BigGAN/SN-GAN. ConditionalBN handles normalization in G.
+     Previous attempts to add SN on G's final conv (v12) disrupted training
+     dynamics without fixing saturation. Instead, a saturation penalty on the
+     G loss directly prevents pre-Tanh values from reaching the gradient
+     dead zone (see cgan.py train_generator).
 
 4. Nearest-neighbor upsampling + Conv2d instead of ConvTranspose2d.
    - Why: Avoids checkerboard artifacts common with ConvTranspose2d.
@@ -128,7 +125,7 @@ class ImprovedGenerator(nn.Module):
       SelfAttention at 8x8
       ResBlockUp 256->128  (8->16)
       ResBlockUp 128->64   (16->32)
-      BN + SN-Conv2d(64, 3) + Tanh  (SN prevents Tanh saturation)
+      BN + Conv2d(64, 3, gain=0.1) + Tanh
     """
     def __init__(
         self,
@@ -152,22 +149,16 @@ class ImprovedGenerator(nn.Module):
         # Self-attention after first upsampling (8x8 resolution)
         self.attn = SelfAttention(base_channels)
 
-        # Final output layer: BN(affine=False) → SN-Conv → Tanh.
-        # SN on the final conv prevents Tanh saturation: with ||W||_op=1,
-        # each weight-matrix row has ||w_j|| ≤ 1 (via SVD).
-        # BN must be affine=False so its outputs truly have std=1;
-        # otherwise the learnable gamma can scale inputs past the SN
-        # constraint (e.g. gamma=5 → pre-Tanh std=5 despite ||w_j||≤1).
-        # With affine=False: pre-Tanh std ≤ ||w_j|| ≤ 1 — guaranteed.
-        self.final_bn = nn.BatchNorm2d(base_channels // 4, affine=False)
+        # Final output layer: BN → Conv(gain=0.1) → Tanh.
+        # The 0.1 init keeps initial pre-Tanh values small. A saturation
+        # penalty in the G loss (see cgan.py) prevents the optimizer from
+        # growing these weights into Tanh's gradient dead zone during
+        # training. Previous approach (SN on this conv, v12) disrupted
+        # training dynamics without fixing saturation.
+        self.final_bn = nn.BatchNorm2d(base_channels // 4)
         self.final_conv = nn.Conv2d(base_channels // 4, 3, 3, padding=1)
 
         self._init_weights()
-
-        # Apply SN *after* init so orthogonal_ targets the real weight param.
-        # (SN replaces .weight with a computed property; initing after SN
-        # would only modify the ephemeral computed tensor, not weight_orig.)
-        self.final_conv = spectral_norm(self.final_conv)
 
     def _init_weights(self):
         for m in self.modules():
@@ -175,9 +166,9 @@ class ImprovedGenerator(nn.Module):
                 nn.init.orthogonal_(m.weight, gain=1.0)
                 if m.bias is not None:
                     nn.init.zeros_(m.bias)
-        # Note: no manual scaling of final_conv needed — spectral norm
-        # constrains ||W||_op=1 on every forward pass, making any fixed
-        # weight scaling irrelevant (SN divides by the spectral norm).
+        # Scale down final conv so initial pre-Tanh activations are small.
+        with torch.no_grad():
+            self.final_conv.weight.mul_(0.1)
 
     def forward(self, z: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
         # Project and reshape: (B, latent_dim) -> (B, C, 4, 4)
@@ -189,10 +180,11 @@ class ImprovedGenerator(nn.Module):
         x = self.res2(x, labels)   # 16x16
         x = self.res3(x, labels)   # 32x32
 
-        # Output: BN → SN-Conv → Tanh
+        # Output: BN → Conv → Tanh (store pre-Tanh for saturation penalty)
         x = self.final_bn(x)
-        x = torch.tanh(self.final_conv(x))
-        return x
+        pre_tanh = self.final_conv(x)
+        self._pre_tanh = pre_tanh
+        return torch.tanh(pre_tanh)
 
 
 # ---- Baseline Generator (for comparison / baseline training) ----

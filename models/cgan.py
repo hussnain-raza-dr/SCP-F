@@ -105,6 +105,14 @@ class cGAN(nn.Module):
         self.criterion = GANLoss(self.loss_type)
         self.grad_clip = training_cfg.get("grad_clip", 0.0)
 
+        # Saturation penalty: penalizes pre-Tanh values that exceed a
+        # threshold, preventing the generator's final conv weights from
+        # growing into Tanh's gradient dead zone. This is a soft
+        # constraint that preserves training dynamics (unlike SN on the
+        # final conv, which disrupted them in v12).
+        self.sat_penalty_weight = training_cfg.get("sat_penalty_weight", 0.0)
+        self.sat_penalty_threshold = training_cfg.get("sat_penalty_threshold", 2.0)
+
         # EMA (Exponential Moving Average) of generator weights
         self.ema_decay = training_cfg.get("ema_decay", 0.0)
         if self.ema_decay > 0:
@@ -229,7 +237,18 @@ class cGAN(nn.Module):
         fake_scores = self.D(fake_images, labels)
 
         g_loss = self.criterion.g_loss(fake_scores)
-        g_loss.backward()
+
+        # Saturation penalty: penalize pre-Tanh values beyond threshold.
+        # At threshold=2.0, tanh(2)=0.964 and tanh'(2)=0.07 — the
+        # generator can still reach near-±1 outputs but retains enough
+        # gradient to learn fine color control.
+        total_g_loss = g_loss
+        if self.sat_penalty_weight > 0 and hasattr(self.G, '_pre_tanh'):
+            excess = torch.relu(self.G._pre_tanh.abs() - self.sat_penalty_threshold)
+            sat_penalty = excess.mean()
+            total_g_loss = total_g_loss + self.sat_penalty_weight * sat_penalty
+
+        total_g_loss.backward()
         if self.grad_clip > 0:
             nn.utils.clip_grad_norm_(self.G.parameters(), self.grad_clip)
         self.opt_G.step()
