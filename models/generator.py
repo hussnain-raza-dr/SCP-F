@@ -14,10 +14,14 @@ Key design choices vs. baseline:
 
 3. NO spectral normalization in the generator (SN is for D only).
    - Why: Standard in BigGAN/SN-GAN. ConditionalBN handles normalization in G.
-     Previous attempts to add SN on G's final conv (v12) disrupted training
-     dynamics without fixing saturation. Instead, a saturation penalty on the
-     G loss directly prevents pre-Tanh values from reaching the gradient
-     dead zone (see cgan.py train_generator).
+
+4a. No output activation (v14): Raw conv output, no Tanh.
+   - Why: Tanh caused persistent saturation across v11-v13. Pre-Tanh values
+     grew to ±10+ where tanh' ≈ 0, killing gradient flow. Fixes attempted:
+     SN on final conv (v12, disrupted dynamics), saturation penalty (v13,
+     fixed colors but D converged too slowly). Without Tanh, D naturally
+     constrains range — out-of-[-1,1] values are trivially fake. This is the
+     modern approach (StyleGAN2). Outputs clamped at inference only.
 
 4. Nearest-neighbor upsampling + Conv2d instead of ConvTranspose2d.
    - Why: Avoids checkerboard artifacts common with ConvTranspose2d.
@@ -125,7 +129,7 @@ class ImprovedGenerator(nn.Module):
       SelfAttention at 8x8
       ResBlockUp 256->128  (8->16)
       ResBlockUp 128->64   (16->32)
-      BN + Conv2d(64, 3, gain=0.1) + Tanh
+      BN + Conv2d(64, 3, gain=0.1) (no activation — v14)
     """
     def __init__(
         self,
@@ -149,12 +153,10 @@ class ImprovedGenerator(nn.Module):
         # Self-attention after first upsampling (8x8 resolution)
         self.attn = SelfAttention(base_channels)
 
-        # Final output layer: BN → Conv(gain=0.1) → Tanh.
-        # The 0.1 init keeps initial pre-Tanh values small. A saturation
-        # penalty in the G loss (see cgan.py) prevents the optimizer from
-        # growing these weights into Tanh's gradient dead zone during
-        # training. Previous approach (SN on this conv, v12) disrupted
-        # training dynamics without fixing saturation.
+        # Final output layer: BN → Conv(gain=0.1), no activation (v14).
+        # The 0.1 init keeps initial outputs small (near zero, well within
+        # [-1,1]). Without Tanh, gradients flow freely through the final
+        # layer at all output magnitudes. D constrains the range implicitly.
         self.final_bn = nn.BatchNorm2d(base_channels // 4)
         self.final_conv = nn.Conv2d(base_channels // 4, 3, 3, padding=1)
 
@@ -180,11 +182,16 @@ class ImprovedGenerator(nn.Module):
         x = self.res2(x, labels)   # 16x16
         x = self.res3(x, labels)   # 32x32
 
-        # Output: BN → Conv → Tanh (store pre-Tanh for saturation penalty)
+        # Output: BN → Conv (no activation).
+        # v14: Removed Tanh — its gradient dead zone caused persistent
+        # saturation issues across v11-v13. Without Tanh, the discriminator
+        # naturally constrains the output range: out-of-[-1,1] values are
+        # trivially detectable as fake, providing a smooth gradient signal
+        # instead of Tanh's hard ceiling. This is the modern approach
+        # (StyleGAN2, etc.). Outputs are clamped to [-1,1] at inference
+        # time for visualization only.
         x = self.final_bn(x)
-        pre_tanh = self.final_conv(x)
-        self._pre_tanh = pre_tanh
-        return torch.tanh(pre_tanh)
+        return self.final_conv(x)
 
 
 # ---- Baseline Generator (for comparison / baseline training) ----

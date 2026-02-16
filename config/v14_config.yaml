@@ -1,0 +1,63 @@
+# Improved cGAN Configuration (v14)
+# Remove Tanh activation from generator output entirely.
+#
+# History:
+#   v11: Good dynamics (losses ~1.0, Real→Real ~85%) but Tanh saturation —
+#     pre-Tanh values grew to ±10+ where tanh' ≈ 0, producing extreme false
+#     colors (pure cyan/white/black/yellow).
+#   v12: SN on G's final conv — disrupted training dynamics. Abandoned.
+#   v13: Saturation penalty on G loss — fixed colors (first natural colors!)
+#     but D converged too slowly (Real→Real stuck at ~55%, ~40-50% white
+#     images). Penalty removed D's "color shortcut", forcing D to learn
+#     harder structural features without enough signal.
+#
+# v14 approach: Remove Tanh entirely (modern approach, StyleGAN2-style).
+#   - G outputs raw conv values (0.1 init keeps them small initially).
+#   - D naturally constrains range: out-of-[-1,1] pixel values are trivially
+#     detectable as fake, providing a smooth gradient signal without Tanh's
+#     hard ceiling. This gives D BOTH a range signal AND structural signal,
+#     unlike v13 where the penalty removed the range signal entirely.
+#   - No saturation penalty needed — the root cause (Tanh) is gone.
+#   - n_critic=1: D should converge faster than v13 because it has the
+#     natural range signal back. TTUR (2x) provides enough D advantage.
+#   - Outputs clamped to [-1,1] at inference time for visualization only.
+
+model:
+  architecture: improved
+  latent_dim: 128
+  embed_dim: 64
+  generator_base_channels: 256
+  discriminator_base_channels: 48    # Midpoint: 32 was too weak, 64 too strong
+  use_self_attention: true
+  use_residual: true
+
+training:
+  batch_size: 128
+  num_epochs: 200
+  lr_g: 0.0001                       # Mild TTUR: D learns 2x faster than G
+  lr_d: 0.0002                       # (v9 was 4x, v10 was 1x)
+  beta1: 0.0
+  beta2: 0.999
+  n_critic: 1                        # D has natural range signal — TTUR is enough
+  loss_type: "hinge"
+  grad_clip: 0.0
+
+  # EMA
+  ema_decay: 0.999
+
+  # No LR schedule initially
+  lr_schedule: "none"
+
+  # Instance noise — extended to full training duration
+  d_noise_std: 0.1                   # Reduced from 0.15 (D needs to see cleaner images)
+  d_noise_decay_epochs: 150          # Compromise: not 100 (v9) or 200 (v10)
+
+  # R1 gradient penalty: still disabled
+  r1_gamma: 0.0
+  r1_every: 16
+
+data:
+  num_classes: 10
+  image_size: 32
+  seed: 42
+  num_workers: 2
