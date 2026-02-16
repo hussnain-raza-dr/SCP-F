@@ -26,13 +26,24 @@
 #   Tanh saturation, D needs more update steps to learn structural features.
 #   This was committed in v13.1 but never tested. TTUR (2x) alone isn't
 #   enough — n_critic=2 effectively gives D a 4x training advantage.
+#
+# v14.1 result (epoch 100): White patches gone, all trends positive (D Loss
+#   declining to 1.4, G Loss rising to 0.42, Real→Real climbing to 63%).
+#   BUT rate is too slow — at epoch 100, images still show oversaturated
+#   extremes (cyan/red/black) with no recognizable objects. D at 48 base
+#   channels doesn't have enough capacity to learn subtle color distribution
+#   and structural features without the Tanh shortcut.
+#
+# v14.2: Increase D base channels 48 → 64. This was rejected as "too strong"
+#   in v9/v10 when D had the Tanh color shortcut. Without it, D genuinely
+#   needs the capacity (~1.8x more parameters) to learn structural features.
 
 model:
   architecture: improved
   latent_dim: 128
   embed_dim: 64
   generator_base_channels: 256
-  discriminator_base_channels: 48    # Midpoint: 32 was too weak, 64 too strong
+  discriminator_base_channels: 64    # v14.2: 48 too weak without Tanh shortcut
   use_self_attention: true
   use_residual: true
 
