@@ -54,7 +54,16 @@
 #
 # v14.4: Keep n_critic=2 (which produced the excellent epochs 30-60 in
 #   v14.2) AND keep R1=1.0 to prevent the post-epoch-60 D dominance.
-#   R1 alone should restrain D without needing to reduce n_critic.
+#
+# v14.4 result (epoch 200): Same end state as v14.2, just delayed by ~40
+#   epochs. R1 at gamma=1.0 slowed D dominance (D crossed 1.0 at ep ~100
+#   vs ep ~60) but didn't prevent it. D Loss fell to 0.75, Real→Real hit
+#   95%. Effective per-step R1 is only gamma/(2×16) ≈ 0.03 — too weak.
+#
+# v14.5: Increase R1 gamma from 1.0 → 10.0. Effective per-step: ~0.31.
+#   This should be strong enough to keep D near equilibrium long-term.
+#   All other params unchanged — we know n_critic=2 + D=64ch converges
+#   well in the first 60 epochs, just need stronger late-training restraint.
 
 model:
   architecture: improved
@@ -88,9 +97,9 @@ training:
 
   # R1 gradient penalty: prevents D from becoming overconfident.
   # penalty = (gamma/2) * ||∇D(real)||², applied every r1_every steps.
-  # gamma=1.0 is conservative — enough to smooth D's boundary without
-  # weakening it too much. Applied every 16 steps for efficiency.
-  r1_gamma: 1.0
+  # gamma=1.0 delayed D dominance by ~40 epochs but didn't prevent it.
+  # gamma=10.0 gives ~10x stronger regularization (effective ~0.31/step).
+  r1_gamma: 10.0
   r1_every: 16
 
 data:
