@@ -45,12 +45,16 @@
 #   hit 93%. D's gradients became uninformative, G regressed to extreme
 #   primaries. D at 64ch + n_critic=2 + TTUR 2x = too much D advantage.
 #
-# v14.3: Enable R1 gradient penalty to prevent D dominance. R1 penalizes
-#   large gradients on real data: gamma/2 * ||∇D(real)||². This keeps D's
-#   decision boundary smooth, preventing overconfidence while preserving
-#   the useful gradient signal that made epochs 30-60 so good.
-#   Also reduce n_critic to 1 — with R1 keeping D in check, n_critic=2
-#   gives D too much advantage. TTUR (2x) + R1 should be enough.
+# v14.3: Enable R1 gradient penalty + reduce n_critic to 1.
+#
+# v14.3 result (epoch 200): Over-corrected. Changed TWO things at once
+#   (n_critic 2→1 AND R1=1.0). D too weak again — D Loss stuck at 1.20,
+#   G Loss only 0.60 after 200 epochs. White patches returned (~30-40%).
+#   Lesson: only change one variable at a time.
+#
+# v14.4: Keep n_critic=2 (which produced the excellent epochs 30-60 in
+#   v14.2) AND keep R1=1.0 to prevent the post-epoch-60 D dominance.
+#   R1 alone should restrain D without needing to reduce n_critic.
 
 model:
   architecture: improved
@@ -68,7 +72,7 @@ training:
   lr_d: 0.0002                       # (v9 was 4x, v10 was 1x)
   beta1: 0.0
   beta2: 0.999
-  n_critic: 1                        # v14.3: n_critic=2 too much with D=64ch + R1
+  n_critic: 2                        # v14.4: restored — n_critic=1 was too weak (v14.3)
   loss_type: "hinge"
   grad_clip: 0.0
 
