@@ -85,7 +85,6 @@ class ImprovedDiscriminator(nn.Module):
         self,
         base_channels: int = 64,
         num_classes: int = 10,
-        embed_dim: int = 256,
     ):
         super().__init__()
 

@@ -1,0 +1,59 @@
+# Improved cGAN Configuration (v12)
+# Fix Tanh saturation from v11 while keeping its balanced training dynamics.
+#
+# v11 recap: Balanced D/G dynamics (losses ~1.0, Real→Real ~85-90%) but
+#   generator outputs fully saturate Tanh — pure cyan/white/black/yellow
+#   pixels. The 0.1 weight init on the final conv was only an initial
+#   constraint; the optimizer grew those weights during training, pushing
+#   pre-Tanh activations to ±10+ where Tanh gradients vanish.
+#
+# v12 changes:
+#   - Spectral norm on G's final conv (persistent ||W||_op=1 constraint).
+#   - BN before final conv set to affine=False so its outputs truly have
+#     std=1. A learnable gamma would act as a "scaling backdoor" past the
+#     SN constraint (gamma=5 → pre-Tanh std=5 despite ||w_j||≤1).
+#   - grad_clip stays at 0.0 — clipping at 1.0 strangled the discriminator
+#     in v12-alpha (D Loss→1.7, G Loss→0.1, D acc ~55%). Typical gradient
+#     norms for a ~5.5M param D with hinge loss are 10-50, so clip=1.0
+#     reduced effective D learning rate by 10-50x.
+#   - All other hyperparameters unchanged from v11.
+
+model:
+  architecture: improved
+  latent_dim: 128
+  embed_dim: 64
+  generator_base_channels: 256
+  discriminator_base_channels: 48    # Midpoint: 32 was too weak, 64 too strong
+  use_self_attention: true
+  use_residual: true
+
+training:
+  batch_size: 128
+  num_epochs: 200
+  lr_g: 0.0001                       # Mild TTUR: D learns 2x faster than G
+  lr_d: 0.0002                       # (v9 was 4x, v10 was 1x)
+  beta1: 0.0
+  beta2: 0.999
+  n_critic: 1                        # Keep at 1 — TTUR provides D advantage
+  loss_type: "hinge"
+  grad_clip: 0.0                     # Disabled — clip=1.0 strangled D in v12-alpha
+
+  # EMA
+  ema_decay: 0.999
+
+  # No LR schedule initially
+  lr_schedule: "none"
+
+  # Instance noise — extended to full training duration
+  d_noise_std: 0.1                   # Reduced from 0.15 (D needs to see cleaner images)
+  d_noise_decay_epochs: 150          # Compromise: not 100 (v9) or 200 (v10)
+
+  # R1 gradient penalty: still disabled
+  r1_gamma: 0.0
+  r1_every: 16
+
+data:
+  num_classes: 10
+  image_size: 32
+  seed: 42
+  num_workers: 2

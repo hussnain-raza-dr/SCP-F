@@ -28,7 +28,7 @@ model:
 
 training:
   batch_size: 128
-  num_epochs: 100
+  num_epochs: 200
   lr_g: 0.0002                       # Equal to lr_d — balanced training
   lr_d: 0.0002                       # Reduced from 0.0004
   beta1: 0.0

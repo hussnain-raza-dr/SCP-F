@@ -1,0 +1,109 @@
+# Improved cGAN Configuration (v14)
+# Remove Tanh activation from generator output entirely.
+#
+# History:
+#   v11: Good dynamics (losses ~1.0, Real→Real ~85%) but Tanh saturation —
+#     pre-Tanh values grew to ±10+ where tanh' ≈ 0, producing extreme false
+#     colors (pure cyan/white/black/yellow).
+#   v12: SN on G's final conv — disrupted training dynamics. Abandoned.
+#   v13: Saturation penalty on G loss — fixed colors (first natural colors!)
+#     but D converged too slowly (Real→Real stuck at ~55%, ~40-50% white
+#     images). Penalty removed D's "color shortcut", forcing D to learn
+#     harder structural features without enough signal.
+#
+# v14 approach: Remove Tanh entirely (modern approach, StyleGAN2-style).
+#   - G outputs raw conv values (0.1 init keeps them small initially).
+#   - No saturation penalty needed — the root cause (Tanh) is gone.
+#   - Outputs clamped to [-1,1] at inference time for visualization only.
+#
+# v14 result (epoch 60): Colors no longer hard-saturated (Tanh fix works),
+#   but D convergence still too slow — same as v13: Real→Real ~55%,
+#   D Loss ~1.63, ~30-40% white patches. The 0.1 init keeps G outputs
+#   small initially, so there's no persistent out-of-range signal for D.
+#   D is still stuck learning structural features without an easy shortcut.
+#
+# v14.1: Increase n_critic to 2. Without the "color shortcut" from v11's
+#   Tanh saturation, D needs more update steps to learn structural features.
+#   This was committed in v13.1 but never tested. TTUR (2x) alone isn't
+#   enough — n_critic=2 effectively gives D a 4x training advantage.
+#
+# v14.1 result (epoch 100): White patches gone, all trends positive (D Loss
+#   declining to 1.4, G Loss rising to 0.42, Real→Real climbing to 63%).
+#   BUT rate is too slow — at epoch 100, images still show oversaturated
+#   extremes (cyan/red/black) with no recognizable objects. D at 48 base
+#   channels doesn't have enough capacity to learn subtle color distribution
+#   and structural features without the Tanh shortcut.
+#
+# v14.2: Increase D base channels 48 → 64. This was rejected as "too strong"
+#   in v9/v10 when D had the Tanh color shortcut. Without it, D genuinely
+#   needs the capacity (~1.8x more parameters) to learn structural features.
+#
+# v14.2 result: Beautiful convergence epochs 0-60 — natural colors,
+#   recognizable objects (birds, frogs, cars, horses), D/G losses converging
+#   toward ~1.0/~1.0. BEST RESULTS SO FAR. But after epoch 60, D became
+#   too dominant: D Loss dropped to 0.73, G Loss rose to 1.30, Real→Real
+#   hit 93%. D's gradients became uninformative, G regressed to extreme
+#   primaries. D at 64ch + n_critic=2 + TTUR 2x = too much D advantage.
+#
+# v14.3: Enable R1 gradient penalty + reduce n_critic to 1.
+#
+# v14.3 result (epoch 200): Over-corrected. Changed TWO things at once
+#   (n_critic 2→1 AND R1=1.0). D too weak again — D Loss stuck at 1.20,
+#   G Loss only 0.60 after 200 epochs. White patches returned (~30-40%).
+#   Lesson: only change one variable at a time.
+#
+# v14.4: Keep n_critic=2 (which produced the excellent epochs 30-60 in
+#   v14.2) AND keep R1=1.0 to prevent the post-epoch-60 D dominance.
+#
+# v14.4 result (epoch 200): Same end state as v14.2, just delayed by ~40
+#   epochs. R1 at gamma=1.0 slowed D dominance (D crossed 1.0 at ep ~100
+#   vs ep ~60) but didn't prevent it. D Loss fell to 0.75, Real→Real hit
+#   95%. Effective per-step R1 is only gamma/(2×16) ≈ 0.03 — too weak.
+#
+# v14.5: Increase R1 gamma from 1.0 → 10.0. Effective per-step: ~0.31.
+#   This should be strong enough to keep D near equilibrium long-term.
+#   All other params unchanged — we know n_critic=2 + D=64ch converges
+#   well in the first 60 epochs, just need stronger late-training restraint.
+
+model:
+  architecture: improved
+  latent_dim: 128
+  embed_dim: 64
+  generator_base_channels: 256
+  discriminator_base_channels: 64    # v14.2: 48 too weak without Tanh shortcut
+  use_self_attention: true
+  use_residual: true
+
+training:
+  batch_size: 128
+  num_epochs: 200
+  lr_g: 0.0001                       # Mild TTUR: D learns 2x faster than G
+  lr_d: 0.0002                       # (v9 was 4x, v10 was 1x)
+  beta1: 0.0
+  beta2: 0.999
+  n_critic: 2                        # v14.4: restored — n_critic=1 was too weak (v14.3)
+  loss_type: "hinge"
+  grad_clip: 0.0
+
+  # EMA
+  ema_decay: 0.999
+
+  # No LR schedule initially
+  lr_schedule: "none"
+
+  # Instance noise — extended to full training duration
+  d_noise_std: 0.1                   # Reduced from 0.15 (D needs to see cleaner images)
+  d_noise_decay_epochs: 150          # Compromise: not 100 (v9) or 200 (v10)
+
+  # R1 gradient penalty: prevents D from becoming overconfident.
+  # penalty = (gamma/2) * ||∇D(real)||², applied every r1_every steps.
+  # gamma=1.0 delayed D dominance by ~40 epochs but didn't prevent it.
+  # gamma=10.0 gives ~10x stronger regularization (effective ~0.31/step).
+  r1_gamma: 10.0
+  r1_every: 16
+
+data:
+  num_classes: 10
+  image_size: 32
+  seed: 42
+  num_workers: 2

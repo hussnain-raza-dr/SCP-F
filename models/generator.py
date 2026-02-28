@@ -14,11 +14,19 @@ Key design choices vs. baseline:
 
 3. NO spectral normalization in the generator (SN is for D only).
    - Why: Standard in BigGAN/SN-GAN. ConditionalBN handles normalization in G.
-     SN on G limits expressivity and causes Tanh saturation at the output layer.
 
-4. Pixel shuffle (sub-pixel convolution) for the final upsampling step.
+4a. No output activation (v14): Raw conv output, no Tanh.
+   - Why: Tanh caused persistent saturation across v11-v13. Pre-Tanh values
+     grew to ±10+ where tanh' ≈ 0, killing gradient flow. Fixes attempted:
+     SN on final conv (v12, disrupted dynamics), saturation penalty (v13,
+     fixed colors but D converged too slowly). Without Tanh, D naturally
+     constrains range — out-of-[-1,1] values are trivially fake. This is the
+     modern approach (StyleGAN2). Outputs clamped at inference only.
+
+4. Nearest-neighbor upsampling + Conv2d instead of ConvTranspose2d.
    - Why: Avoids checkerboard artifacts common with ConvTranspose2d.
-     PixelShuffle rearranges channels into spatial resolution cleanly.
+     Nearest-neighbor interpolation followed by a learned convolution
+     produces cleaner spatial upsampling without deconvolution artifacts.
 
 5. Class conditioning via projection (not concatenation).
    - Why: Projection conditioning (embedding projected into a scale/shift for
@@ -121,7 +129,7 @@ class ImprovedGenerator(nn.Module):
       SelfAttention at 8x8
       ResBlockUp 256->128  (8->16)
       ResBlockUp 128->64   (16->32)
-      BN + Conv2d(SN, 64, 3) + Tanh  (no ReLU — centered inputs prevent saturation)
+      BN + Conv2d(64, 3, gain=0.1) (no activation — v14)
     """
     def __init__(
         self,
@@ -145,14 +153,12 @@ class ImprovedGenerator(nn.Module):
         # Self-attention after first upsampling (8x8 resolution)
         self.attn = SelfAttention(base_channels)
 
-        # Final output layer: BN → Conv(SN) → Tanh.
-        # SN on the final conv is the ONLY SN in G — it structurally prevents
-        # Tanh saturation. No ReLU: BN gives centered ~N(0,1) inputs, so the
-        # dot product w·x involves cancellations → output stays ~N(0, ||w||²)
-        # ≈ N(0,1). With ReLU, all-positive inputs would sum constructively
-        # → output magnitude ~sqrt(fan_in) → permanent Tanh saturation.
+        # Final output layer: BN → Conv(gain=0.1), no activation (v14).
+        # The 0.1 init keeps initial outputs small (near zero, well within
+        # [-1,1]). Without Tanh, gradients flow freely through the final
+        # layer at all output magnitudes. D constrains the range implicitly.
         self.final_bn = nn.BatchNorm2d(base_channels // 4)
-        self.final_conv = spectral_norm(nn.Conv2d(base_channels // 4, 3, 3, padding=1))
+        self.final_conv = nn.Conv2d(base_channels // 4, 3, 3, padding=1)
 
         self._init_weights()
 
@@ -162,6 +168,9 @@ class ImprovedGenerator(nn.Module):
                 nn.init.orthogonal_(m.weight, gain=1.0)
                 if m.bias is not None:
                     nn.init.zeros_(m.bias)
+        # Scale down final conv so initial pre-Tanh activations are small.
+        with torch.no_grad():
+            self.final_conv.weight.mul_(0.1)
 
     def forward(self, z: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
         # Project and reshape: (B, latent_dim) -> (B, C, 4, 4)
@@ -173,10 +182,16 @@ class ImprovedGenerator(nn.Module):
         x = self.res2(x, labels)   # 16x16
         x = self.res3(x, labels)   # 32x32
 
-        # Output: BN → Conv(SN) → Tanh (no ReLU — keeps inputs centered)
+        # Output: BN → Conv (no activation).
+        # v14: Removed Tanh — its gradient dead zone caused persistent
+        # saturation issues across v11-v13. Without Tanh, the discriminator
+        # naturally constrains the output range: out-of-[-1,1] values are
+        # trivially detectable as fake, providing a smooth gradient signal
+        # instead of Tanh's hard ceiling. This is the modern approach
+        # (StyleGAN2, etc.). Outputs are clamped to [-1,1] at inference
+        # time for visualization only.
         x = self.final_bn(x)
-        x = torch.tanh(self.final_conv(x))
-        return x
+        return self.final_conv(x)
 
 
 # ---- Baseline Generator (for comparison / baseline training) ----

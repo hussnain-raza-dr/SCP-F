@@ -40,12 +40,13 @@ from evaluation.visualize import (
 
 
 def set_seed(seed: int = 42):
-    """Fix random seeds for reproducibility. benchmark=True enables cuDNN auto-tuning."""
+    """Fix random seeds for reproducibility."""
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
-    torch.backends.cudnn.benchmark = True
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
 
 
 def load_config(path: str) -> dict:
@@ -183,6 +184,12 @@ def train(config: dict, arch: str, resume_path: str = None):
         # ---- Save samples every 10 epochs ----
         if (epoch + 1) % 10 == 0 or epoch == 0:
             samples = model.generate(fixed_labels, fixed_z)
+
+            # Monitor Tanh saturation: fraction of pixels at ±1
+            sat_ratio = (samples.abs() > 0.99).float().mean().item()
+            print(f"  Saturation ratio: {sat_ratio:.2%}"
+                  f"{' *** WARNING: likely Tanh saturation' if sat_ratio > 0.3 else ''}")
+
             save_image_grid(
                 samples,
                 results_dir / f"samples_epoch_{epoch+1:04d}.png",
